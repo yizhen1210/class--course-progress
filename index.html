@@ -231,9 +231,9 @@
         const SAVE_MERGE = false;              // 整包覆蓋：本 app 每次都持有完整狀態，直接覆蓋最單純、不會有 merge 語意疑慮
 
         // 登入模式：'A'=共用帳號只輸密碼；'B'=綁 1 個 Google 帳號；'C'=綁 2 個 Google 帳號
-        const LOGIN_MODE = 'A';
-        const SHARED_EMAIL = "annychen1210@gmail.com";              // 模式 A：寫死的登入 email
-        const ALLOWED_EMAILS = ["one@gmail.com", "two@gmail.com"]; // 模式 B 取[0]；模式 C 取兩個
+        const LOGIN_MODE = 'C';
+        const SHARED_EMAIL = "annychen1210@gmail.com";              // 模式 A 才會用到，模式 C 可略過
+        const ALLOWED_EMAILS = ["annychen1210@gmail.com", "annychen1210@go.edu.tw"]; // 模式 C：這兩個帳號都能登入編輯
         /* ================================================ */
 
         // 啟動前檢查 config 是否已填，未填則顯示提示而非白畫面崩潰
