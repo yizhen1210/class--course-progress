@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>班級進度手帳</title>
+    <title>班級課程進度</title>
 
     <!-- PWA / 桌面圖示：三張 PNG 與此檔同目錄一起上傳，檔名須與 manifest 一致 -->
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" sizes="180x180" href="icon-180.png">
-    <meta name="theme-color" content="#b23b2e">
+    <meta name="theme-color" content="#7a6c96">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Iansui&display=swap" rel="stylesheet">
@@ -16,16 +16,16 @@
     <style>
         /* ---- 全站設計變數：顏色一律用變數，勿寫死 ---- */
         :root {
-            --bg: #f1ede1;          /* 頁面底色 */
-            --surface: #fffdf7;     /* 卡片/輸入框底 */
-            --text: #2a2823;        /* 主文字 */
-            --muted: #8f8877;       /* 次要/placeholder */
-            --accent-rgb: 178,59,46;              /* 主色 RGB（改這裡即可，其餘自動跟隨） */
+            --bg: #ece8f0;          /* 頁面底色：icon 的淺灰紫 */
+            --surface: #fbf7ec;     /* 卡片/輸入框底：icon 打勾的米白 */
+            --text: #372f40;        /* 主文字：深灰紫 */
+            --muted: #948c9e;       /* 次要/placeholder */
+            --accent-rgb: 122,108,150;             /* 主色 RGB：icon 灰紫加深（改這裡即可，其餘自動跟隨） */
             --accent: rgb(var(--accent-rgb));     /* 主色（按鈕、邊框、focus） */
             --focus-glow: color-mix(in srgb, var(--accent) 50%, transparent); /* focus 光暈：自動＝主色 */
             --accent-dark: color-mix(in srgb, var(--accent) 82%, #000); /* 主色 hover：自動加深 */
-            --line: #cdbfa0;        /* 分隔線/淺邊框 */
-            --danger: #c4674f;      /* 刪除/警示 */
+            --line: #d9d0e0;        /* 分隔線/淺邊框 */
+            --danger: #a85b6b;      /* 刪除/警示 */
         }
         * { box-sizing: border-box; }
         body {
@@ -65,6 +65,9 @@
         .btn.outline { background: transparent; color: var(--accent); }
 
         .admin-only.hidden { display: none; }
+        /* 登入後：不需要再看見登入鈕與上方唯讀預覽，只留編輯區 */
+        body.is-admin #loginBtn { display: none; }
+        body.is-admin #content { display: none; }
 
         /* =========================================================
            以下為本 app 業務內容專用樣式（只新增，不改上面共用命名）
@@ -155,7 +158,7 @@
 <body>
     <!-- ====== 版面骨架（業務內容放這裡） ====== -->
     <header>
-        <h1 data-gated><span id="appTitle">班級進度手帳</span></h1>
+        <h1 data-gated><span id="appTitle">班級課程進度</span></h1>
         <!-- 登入入口：模式 B/C 用這顆 Google 登入；模式 A 改用密碼彈窗（見下 openLogin） -->
         <button id="loginBtn" class="btn outline">登入</button>
         <button id="logoutBtn" class="btn outline admin-only hidden">登出</button>
@@ -281,6 +284,7 @@
         onAuthStateChanged(auth, user => {
             isAdmin = isAuthorized(user);
             document.querySelectorAll('.admin-only').forEach(el => el.classList.toggle('hidden', !isAdmin));
+            document.body.classList.toggle('is-admin', isAdmin);
             maybeLoadEditor();
         });
 
@@ -328,7 +332,7 @@
              holidays:{ 'YYYY-MM-DD': '假日名稱' } }
            課程進度／週進度／作業安排三個畫面共用這份資料，只是排版不同。
         ============================================== */
-        const PALETTE = ['#b23b2e','#2e5f8a','#3f6b4c','#a8791a','#7b4b8a','#2f7a78','#5c5487','#c1743f'];
+        const PALETTE = ['#7a6c96','#5c7f8a','#8a6a4a','#6a8a5c','#8a5a73','#4a7a8a','#8a7a4a','#5a5c8a'];
         const WD = ['日','一','二','三','四','五','六'];
         const pad = n => String(n).padStart(2,'0');
         const fmt = d => d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
@@ -360,6 +364,27 @@
             if(!data || !data.config){ el.innerHTML = '<div class="empty">尚未建立學期資料，請登入後在「學期設定」建立。</div>'; return; }
             const dates = schoolDates(data.config);
             const todayStr = fmt(new Date());
+
+            // 找出「本週」：今天所在的那一週；學期還沒開始就顯示第一週，已結束就顯示最後一週
+            const weeks = weeksOf(dates);
+            let curWeek = weeks.find(w => todayStr <= w[w.length-1]);
+            if(!curWeek) curWeek = weeks[weeks.length-1];
+
+            const weekCols = (curWeek||[]).map(ds=>{
+                const subs = subjectsOnDate(data.config, ds);
+                const holiday = data.holidays && data.holidays[ds];
+                const isToday = ds === todayStr;
+                const body = subs.length ? subs.map(s=>{
+                    const e = getEntry(data, ds, s.id);
+                    return `<div class="subj-card" style="--c:${s.color};"><div class="sname">${esc(s.name)}</div>
+                        <p style="margin:2px 0 0; font-size:13px;">${e.progress ? esc(e.progress) : '<span class="hint">（尚未填寫）</span>'}</p></div>`;
+                }).join('') : '<div class="day-empty">這天沒有排課</div>';
+                return `<div class="day-col" style="${isToday?'outline:2px solid var(--accent);':''}">
+                    <div class="day-head"><span class="d">${shortD(ds)}</span><span class="w">週${WD[wdOf(ds)]}${holiday?' · '+esc(holiday):''}</span></div>
+                    <div class="day-body">${body}</div>
+                </div>`;
+            }).join('');
+
             const upcoming = dates.filter(ds => ds >= todayStr).slice(0, 5);
             const blocks = upcoming.map(ds=>{
                 const subs = subjectsOnDate(data.config, ds).map(s=>({s,e:getEntry(data,ds,s.id)})).filter(x=>x.e.homework && x.e.homework.trim());
@@ -369,10 +394,15 @@
                     ${subs.length ? '<ul>'+subs.map(x=>`<li>${esc(x.s.name)}：${esc(x.e.homework)}</li>`).join('')+'</ul>' : '<p class="hint" style="margin:4px 0 0;">（尚未填寫作業）</p>'}
                 </div>`;
             }).join('');
+
             el.innerHTML = `<div id="wrap" class="public-digest">
                 <div class="card section">
-                    <h2>${esc(data.config.termName || '本學期')} · 近期作業</h2>
+                    <h2>${esc(data.config.termName || '本學期')} · 本週課程進度</h2>
                     <p class="hint">此頁面公開唯讀，僅供快速查看；完整編輯請登入。</p>
+                    <div class="week-grid" style="margin-top:10px;">${weekCols || '<p class="hint">目前沒有排定的上課日。</p>'}</div>
+                </div>
+                <div class="card section">
+                    <h2>近期作業</h2>
                     ${blocks || '<p class="hint">目前沒有排定的上課日。</p>'}
                 </div>
             </div>`;
