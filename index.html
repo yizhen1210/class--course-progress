@@ -17,7 +17,7 @@
         /* ---- 全站設計變數：顏色一律用變數，勿寫死 ---- */
         :root {
             --bg: #ece8f0;          /* 頁面底色：icon 的淺灰紫 */
-            --surface: #fbf7ec;     /* 卡片/輸入框底：icon 打勾的米白 */
+            --surface: #ffffff;     /* 卡片/輸入框底：改為乾淨白色 */
             --text: #372f40;        /* 主文字：深灰紫 */
             --muted: #948c9e;       /* 次要/placeholder */
             --accent-rgb: 122,108,150;             /* 主色 RGB：icon 灰紫加深（改這裡即可，其餘自動跟隨） */
@@ -26,6 +26,7 @@
             --accent-dark: color-mix(in srgb, var(--accent) 82%, #000); /* 主色 hover：自動加深 */
             --line: #d9d0e0;        /* 分隔線/淺邊框 */
             --danger: #a85b6b;      /* 刪除/警示 */
+            --holiday: #c0392b;     /* 假日標記色：固定紅色，不隨主色變動 */
         }
         * { box-sizing: border-box; }
         body {
@@ -63,6 +64,7 @@
         /* ---- 一般按鈕 ---- */
         .btn { padding: 9px 22px; border-radius: 50px; border: 2px solid var(--accent); background: var(--accent); color: #fff; font-family: inherit; font-size: 1em; cursor: pointer; }
         .btn.outline { background: transparent; color: var(--accent); }
+        .btn.outline:hover { background: var(--accent); color: #fff; }
 
         .admin-only.hidden { display: none; }
         /* 登入後：不需要再看見登入鈕與上方唯讀預覽，只留編輯區 */
@@ -72,8 +74,9 @@
         /* =========================================================
            以下為本 app 業務內容專用樣式（只新增，不改上面共用命名）
            ========================================================= */
-        header { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:16px 20px; flex-wrap:wrap; border-bottom:1px solid var(--line); }
-        header h1 { font-size:22px; margin:0; }
+        header { position:relative; display:flex; align-items:center; justify-content:center; padding:20px; border-bottom:1px solid var(--line); }
+        header h1 { font-size:30px; margin:0; text-align:center; }
+        .header-btn { position:absolute; right:20px; top:50%; transform:translateY(-50%); }
         #wrap { max-width:980px; margin:0 auto; padding:0 20px 60px; }
         .card { background:var(--surface); border:1px solid var(--line); border-radius:14px; box-shadow:0 1px 0 rgba(0,0,0,.04); }
         .section { padding:18px 20px; margin:16px 0; }
@@ -95,7 +98,7 @@
         button.icon-btn:hover { background:var(--bg); }
         .empty { text-align:center; padding:40px 20px; color:var(--muted); }
 
-        nav.tabs { display:flex; gap:4px; margin:14px 0 6px; border-bottom:2px solid var(--line); overflow-x:auto; }
+        nav.tabs { display:flex; gap:4px; margin:14px 0 6px; border-bottom:2px solid var(--line); flex-wrap:wrap; overflow:visible; }
         nav.tabs button { font-family:inherit; font-weight:700; font-size:14.5px; background:none; border:none; cursor:pointer; color:var(--muted); padding:9px 14px 11px; position:relative; white-space:nowrap; }
         nav.tabs button.active { color:var(--text); }
         nav.tabs button.active::after { content:""; position:absolute; left:8px; right:8px; bottom:-2px; height:3px; background:var(--accent); border-radius:2px 2px 0 0; }
@@ -115,11 +118,11 @@
         .month-head { font-weight:700; font-size:15px; margin:16px 0 6px; }
         .month-head:first-child { margin-top:0; }
         .entry-row { display:grid; grid-template-columns:78px 1fr 1fr; gap:10px; align-items:start; padding:8px 6px; border-radius:8px; }
-        .entry-row.holiday { background:#f3ded4; }
+        .entry-row.holiday { background:color-mix(in srgb, var(--holiday) 10%, white); }
         .entry-row + .entry-row { border-top:1px solid var(--bg); }
         .date-lbl { font-weight:700; font-size:13px; padding-top:8px; display:flex; flex-direction:column; gap:2px; }
         .date-lbl .wd { font-weight:500; color:var(--muted); font-size:11.5px; }
-        .stamp { display:inline-block; font-size:10px; font-weight:700; color:var(--accent); border:1.5px solid var(--accent); border-radius:5px; padding:1px 4px; transform:rotate(-6deg); width:fit-content; }
+        .stamp { display:inline-block; font-size:10px; font-weight:700; color:var(--holiday); border:1.5px solid var(--holiday); border-radius:5px; padding:1px 4px; transform:rotate(-6deg); width:fit-content; }
         .entry-row textarea { min-height:34px; }
 
         .week-nav { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; gap:10px; flex-wrap:wrap; }
@@ -160,8 +163,8 @@
     <header>
         <h1 data-gated><span id="appTitle">班級課程進度</span></h1>
         <!-- 登入入口：模式 B/C 用這顆 Google 登入；模式 A 改用密碼彈窗（見下 openLogin） -->
-        <button id="loginBtn" class="btn outline">登入</button>
-        <button id="logoutBtn" class="btn outline admin-only hidden">登出</button>
+        <button id="loginBtn" class="btn outline header-btn">登入</button>
+        <button id="logoutBtn" class="btn outline admin-only hidden header-btn">登出</button>
     </header>
 
     <main id="content" data-gated>
@@ -234,9 +237,9 @@
         const SAVE_MERGE = false;              // 整包覆蓋：本 app 每次都持有完整狀態，直接覆蓋最單純、不會有 merge 語意疑慮
 
         // 登入模式：'A'=共用帳號只輸密碼；'B'=綁 1 個 Google 帳號；'C'=綁 2 個 Google 帳號
-        const LOGIN_MODE = 'C';
-        const SHARED_EMAIL = "annychen1210@gmail.com";              // 模式 A 才會用到，模式 C 可略過
-        const ALLOWED_EMAILS = ["annychen1210@gmail.com", "annychen1210@go.edu.tw"]; // 模式 C：這兩個帳號都能登入編輯
+        const LOGIN_MODE = 'A';
+        const SHARED_EMAIL = "annychen1210@gmail.com";              // 模式 A：寫死的登入 email（密碼在 Firebase Authentication 後台設定）
+        const ALLOWED_EMAILS = ["annychen1210@gmail.com", "annychen1210@go.edu.tw"]; // 模式 A 不會用到，保留供之後切換
         /* ================================================ */
 
         // 啟動前檢查 config 是否已填，未填則顯示提示而非白畫面崩潰
@@ -380,7 +383,7 @@
                         <p style="margin:2px 0 0; font-size:13px;">${e.progress ? esc(e.progress) : '<span class="hint">（尚未填寫）</span>'}</p></div>`;
                 }).join('') : '<div class="day-empty">這天沒有排課</div>';
                 return `<div class="day-col" style="${isToday?'outline:2px solid var(--accent);':''}">
-                    <div class="day-head"><span class="d">${shortD(ds)}</span><span class="w">週${WD[wdOf(ds)]}${holiday?' · '+esc(holiday):''}</span></div>
+                    <div class="day-head"><span class="d">${shortD(ds)}</span><span class="w">週${WD[wdOf(ds)]}${holiday?` · <span style="color:var(--holiday); font-weight:700;">${esc(holiday)}</span>`:''}</span></div>
                     <div class="day-body">${body}</div>
                 </div>`;
             }).join('');
@@ -548,7 +551,7 @@
                         return `<div class="subj-card" style="--c:${s.color};"><div class="sname">${esc(s.name)}</div>
                             <textarea data-field="progress" data-sid="${s.id}" data-date="${ds}" placeholder="（尚未填寫）">${esc(e.progress)}</textarea></div>`;
                     }).join('') : '<div class="day-empty">這天沒有排課</div>';
-                    return `<div class="day-col"><div class="day-head"><span class="d">${shortD(ds)}</span><span class="w">週${WD[wdOf(ds)]}${isHoliday?' · '+esc(local.holidays[ds]):''}</span></div><div class="day-body">${body}</div></div>`;
+                    return `<div class="day-col"><div class="day-head"><span class="d">${shortD(ds)}</span><span class="w">週${WD[wdOf(ds)]}${isHoliday?` · <span style="color:var(--holiday); font-weight:700;">${esc(local.holidays[ds])}</span>`:''}</span></div><div class="day-body">${body}</div></div>`;
                 }).join('');
                 return `<div class="week-nav">
                     <button class="icon-btn" id="wk-prev" ${ui.weekIdx<=0?'disabled':''}>← 上一週</button>
