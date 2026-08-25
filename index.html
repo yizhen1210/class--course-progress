@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>班級進度手帳</title>
+
+    <!-- PWA / 桌面圖示：三張 PNG 與此檔同目錄一起上傳，檔名須與 manifest 一致 -->
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" sizes="180x180" href="icon-180.png">
+    <meta name="theme-color" content="#b23b2e">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Iansui&display=swap" rel="stylesheet">
+
+    <style>
+        /* ---- 全站設計變數：顏色一律用變數，勿寫死 ---- */
+        :root {
+            --bg: #f1ede1;          /* 頁面底色 */
+            --surface: #fffdf7;     /* 卡片/輸入框底 */
+            --text: #2a2823;        /* 主文字 */
+            --muted: #8f8877;       /* 次要/placeholder */
+            --accent-rgb: 178,59,46;              /* 主色 RGB（改這裡即可，其餘自動跟隨） */
+            --accent: rgb(var(--accent-rgb));     /* 主色（按鈕、邊框、focus） */
+            --focus-glow: color-mix(in srgb, var(--accent) 50%, transparent); /* focus 光暈：自動＝主色 */
+            --accent-dark: color-mix(in srgb, var(--accent) 82%, #000); /* 主色 hover：自動加深 */
+            --line: #cdbfa0;        /* 分隔線/淺邊框 */
+            --danger: #c4674f;      /* 刪除/警示 */
+        }
+        * { box-sizing: border-box; }
+        body {
+            font-family: 'Iansui', system-ui, sans-serif;
+            margin: 0; min-height: 100vh;
+            background: var(--bg); color: var(--text);
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* ---- 載入 gate：首次資料到齊前隱藏會變動的內容，避免預設值閃現 ---- */
+        body:not(.ready) [data-gated] { visibility: hidden; }
+
+        /* ---- 彈窗 base（所有 app 共用這組命名，勿改名） ---- */
+        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.45); align-items: center; justify-content: center; z-index: 1000; }
+        .modal-content { background: var(--surface); border: 3px solid var(--line); padding: 36px 44px; border-radius: 20px; text-align: center; box-shadow: 0 20px 55px rgba(0,0,0,0.4); width: min(520px, 90vw); }
+        .modal-title { font-size: 1.4em; margin: 0 0 22px; }
+        .modal-content input { display: block; width: 100%; margin: 0 0 24px; padding: 12px 18px; border: 2px solid var(--line); border-radius: 14px; font-family: inherit; font-size: 1.1em; outline: none; text-align: center; background: var(--surface); color: var(--text); }
+        .modal-content input::placeholder { color: var(--muted); }
+        .modal-input { display: block; width: 100%; margin: 0 0 24px; padding: 12px 18px; border: 2px solid var(--line); border-radius: 14px; font-family: inherit; font-size: 1.1em; outline: none; text-align: center; background: var(--surface); color: var(--text); }
+        .modal-input::placeholder { color: var(--muted); }
+        .modal-input:focus { border-color: var(--accent); box-shadow: 0 0 12px 3px var(--focus-glow); }
+        .modal-content input:focus { border-color: var(--accent); box-shadow: 0 0 12px 3px var(--focus-glow); }
+        .modal-hint { display: none; margin: -14px 0 18px; font-size: 0.9em; color: var(--danger); }
+        .modal-actions { display: flex; justify-content: center; gap: 18px; }
+        .modal-actions button { padding: 11px 38px; border-radius: 50px; cursor: pointer; font-family: inherit; font-size: 1.15em; border: 2px solid var(--accent); }
+        .btn-ok { background: var(--accent); color: #fff; }
+        .btn-ok:hover { background: var(--accent-dark); }
+        .btn-cancel { background: #f2f8f9; color: var(--accent); }
+        .btn-cancel:hover { background: var(--accent); color: #fff; }
+        @media (max-width: 640px) {
+            .modal-content { padding: 26px 22px; width: min(420px, 88vw); }
+            .modal-title { white-space: nowrap; }
+        }
+
+        /* ---- 一般按鈕 ---- */
+        .btn { padding: 9px 22px; border-radius: 50px; border: 2px solid var(--accent); background: var(--accent); color: #fff; font-family: inherit; font-size: 1em; cursor: pointer; }
+        .btn.outline { background: transparent; color: var(--accent); }
+
+        .admin-only.hidden { display: none; }
+
+        /* =========================================================
+           以下為本 app 業務內容專用樣式（只新增，不改上面共用命名）
+           ========================================================= */
+        header { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:16px 20px; flex-wrap:wrap; border-bottom:1px solid var(--line); }
+        header h1 { font-size:22px; margin:0; }
+        #wrap { max-width:980px; margin:0 auto; padding:0 20px 60px; }
+        .card { background:var(--surface); border:1px solid var(--line); border-radius:14px; box-shadow:0 1px 0 rgba(0,0,0,.04); }
+        .section { padding:18px 20px; margin:16px 0; }
+        .hint { font-size:12.5px; color:var(--muted); line-height:1.7; }
+        .row { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+        .field { display:flex; flex-direction:column; gap:4px; }
+        .field label { font-size:12px; color:var(--muted); font-weight:600; }
+        input[type=text], input[type=date], textarea, select {
+            font-family:inherit; font-size:14px; color:var(--text);
+            background:#fff; border:1px solid var(--line); border-radius:8px; padding:7px 9px;
+        }
+        input[type=text]:focus, input[type=date]:focus, textarea:focus {
+            outline:none; border-color:var(--accent); box-shadow:0 0 10px 2px var(--focus-glow);
+        }
+        textarea { resize:vertical; font-family:inherit; width:100%; }
+        .btn.small { padding:5px 12px; font-size:12.5px; }
+        .btn.danger { background:var(--danger); border-color:var(--danger); }
+        button.icon-btn { background:none; border:1px solid var(--line); border-radius:8px; cursor:pointer; padding:5px 9px; font-size:13px; color:var(--text); }
+        button.icon-btn:hover { background:var(--bg); }
+        .empty { text-align:center; padding:40px 20px; color:var(--muted); }
+
+        nav.tabs { display:flex; gap:4px; margin:14px 0 6px; border-bottom:2px solid var(--line); overflow-x:auto; }
+        nav.tabs button { font-family:inherit; font-weight:700; font-size:14.5px; background:none; border:none; cursor:pointer; color:var(--muted); padding:9px 14px 11px; position:relative; white-space:nowrap; }
+        nav.tabs button.active { color:var(--text); }
+        nav.tabs button.active::after { content:""; position:absolute; left:8px; right:8px; bottom:-2px; height:3px; background:var(--accent); border-radius:2px 2px 0 0; }
+
+        .chips { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px; }
+        .chip { display:inline-flex; align-items:center; gap:6px; padding:6px 12px; border-radius:999px; font-size:13.5px; font-weight:700; cursor:pointer; border:2px solid transparent; background:var(--bg); }
+        .chip .dot { width:8px; height:8px; border-radius:50%; }
+        .chip.active { border-color:currentColor; background:#fff; }
+
+        .subj-row { display:grid; grid-template-columns:22px 1fr auto; gap:10px; align-items:center; padding:8px 0; border-bottom:1px dashed var(--line); }
+        .subj-row:last-child { border-bottom:none; }
+        .wd-toggles { display:flex; gap:4px; }
+        .wd-toggles button { width:28px; height:28px; border-radius:6px; border:1px solid var(--line); background:#fff; font-size:12.5px; cursor:pointer; color:var(--muted); font-weight:700; }
+        .wd-toggles button.on { background:var(--text); color:#fff; border-color:var(--text); }
+        .swatch { width:20px; height:20px; border-radius:50%; border:2px solid #fff; box-shadow:0 0 0 1px var(--line); cursor:pointer; }
+
+        .month-head { font-weight:700; font-size:15px; margin:16px 0 6px; }
+        .month-head:first-child { margin-top:0; }
+        .entry-row { display:grid; grid-template-columns:78px 1fr 1fr; gap:10px; align-items:start; padding:8px 6px; border-radius:8px; }
+        .entry-row.holiday { background:#f3ded4; }
+        .entry-row + .entry-row { border-top:1px solid var(--bg); }
+        .date-lbl { font-weight:700; font-size:13px; padding-top:8px; display:flex; flex-direction:column; gap:2px; }
+        .date-lbl .wd { font-weight:500; color:var(--muted); font-size:11.5px; }
+        .stamp { display:inline-block; font-size:10px; font-weight:700; color:var(--accent); border:1.5px solid var(--accent); border-radius:5px; padding:1px 4px; transform:rotate(-6deg); width:fit-content; }
+        .entry-row textarea { min-height:34px; }
+
+        .week-nav { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; gap:10px; flex-wrap:wrap; }
+        .week-range { font-weight:700; font-size:16px; }
+        .week-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:10px; }
+        @media (max-width:820px) { .week-grid { grid-template-columns:1fr; } }
+        .day-col { background:var(--surface); border:1px solid var(--line); border-radius:10px; overflow:hidden; }
+        .day-head { padding:9px 10px; border-bottom:1px solid var(--line); background:var(--bg); display:flex; justify-content:space-between; align-items:center; }
+        .day-head .d { font-weight:700; font-size:13.5px; }
+        .day-head .w { font-size:11px; color:var(--muted); }
+        .day-body { padding:8px; display:flex; flex-direction:column; gap:8px; min-height:50px; }
+        .subj-card { border-radius:8px; padding:7px 8px; border-left:4px solid var(--c); background:color-mix(in srgb, var(--c) 8%, white); }
+        .subj-card .sname { font-size:11.5px; font-weight:700; color:var(--c); }
+        .subj-card textarea { width:100%; min-height:30px; border:none; background:transparent; padding:2px 0; font-size:13px; }
+        .subj-card textarea:focus { outline:none; box-shadow:none; }
+        .day-empty { font-size:12px; color:var(--muted); padding:10px 4px; }
+
+        .hw-day { padding:14px 16px; margin-bottom:10px; }
+        .hw-day-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; flex-wrap:wrap; gap:8px; }
+        .hw-day-head .d { font-weight:700; font-size:15.5px; }
+        .hw-list { list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:5px; }
+        .hw-list li { font-size:13.5px; padding-left:14px; position:relative; }
+        .hw-list li::before { content:"·"; position:absolute; left:2px; font-weight:900; }
+        .toggle-row { display:flex; align-items:center; gap:8px; margin-bottom:14px; font-size:13px; color:var(--muted); }
+        .holiday-list { display:flex; flex-direction:column; gap:6px; margin-top:10px; }
+        .holiday-item { display:flex; gap:8px; align-items:center; font-size:13px; background:var(--bg); border-radius:8px; padding:6px 9px; }
+        .holiday-item .lbl { flex:1; }
+        .saved-flag { font-size:11px; color:var(--muted); margin-left:6px; opacity:0; transition:opacity .3s; }
+        .saved-flag.show { opacity:1; }
+        .public-digest h2 { font-size:17px; margin:0 0 4px; }
+        .public-digest ul { margin:6px 0 0; padding-left:18px; }
+        .public-digest li { font-size:13.5px; margin:3px 0; }
+        footer.note { margin-top:24px; font-size:11px; color:var(--muted); text-align:center; }
+    </style>
+</head>
+<body>
+    <!-- ====== 版面骨架（業務內容放這裡） ====== -->
+    <header>
+        <h1 data-gated><span id="appTitle">班級進度手帳</span></h1>
+        <!-- 登入入口：模式 B/C 用這顆 Google 登入；模式 A 改用密碼彈窗（見下 openLogin） -->
+        <button id="loginBtn" class="btn outline">登入</button>
+        <button id="logoutBtn" class="btn outline admin-only hidden">登出</button>
+    </header>
+
+    <main id="content" data-gated>
+        <!-- 家長端/一般使用者看到的內容：今日／近期作業唯讀摘要 -->
+    </main>
+
+    <section id="adminArea" class="admin-only hidden">
+        <!-- 登入後才顯示的編輯區：課程進度 / 週進度 / 作業安排 / 學期設定 -->
+    </section>
+
+    <!-- ====== 密碼彈窗（僅登入模式 A 使用） ====== -->
+    <div id="inputModal" class="modal-overlay">
+        <div class="modal-content">
+            <p class="modal-title">請輸入密碼</p>
+            <input type="password" id="passInput" placeholder="密碼" autocomplete="off">
+            <p id="imeHint" class="modal-hint">偵測到中文輸入法，密碼請切換為英數</p>
+            <div class="modal-actions">
+                <button class="btn-ok" onclick="checkPass()">確定</button>
+                <button class="btn-cancel" onclick="closeModal()">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ====== 通用提示框（取代原生 alert） ====== -->
+    <div id="alertModal" class="modal-overlay">
+        <div class="modal-content">
+            <p class="modal-title" id="alertMsg"></p>
+            <div class="modal-actions">
+                <button class="btn-ok" onclick="closeAlert()">確定</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ====== 通用輸入框（取代原生 prompt；askInput 使用） ====== -->
+    <div id="promptModal" class="modal-overlay">
+        <div class="modal-content">
+            <p class="modal-title" id="promptMsg"></p>
+            <input type="text" id="promptInput" class="modal-input">
+            <div class="modal-actions">
+                <button class="btn-cancel" id="promptNo">取消</button>
+                <button class="btn-ok" id="promptOk">確定</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        /* =========================================================
+           通用骨架：Firebase + 三種登入模式 + 通用資料層 + 載入 gate
+           每支新 app 從此檔複製，只改「業務設定」與「業務邏輯」兩區。
+           ========================================================= */
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, onAuthStateChanged, signOut,
+                 signInWithEmailAndPassword,
+                 GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, onSnapshot, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        const $ = id => document.getElementById(id);
+
+        /* ========== 業務設定（每支 app 改這裡） ========== */
+        // apiKey 可公開（Firebase web key 為識別碼，非機密）；安全靠 Firestore 規則，勿試圖隱藏
+        const firebaseConfig = {
+            apiKey: "AIzaSyA1S_AmQ_DbtxWMhQSSVacFr4pzrg4nfLk",
+            authDomain: "class-course-progress.firebaseapp.com",
+            projectId: "class-course-progress",
+            storageBucket: "class-course-progress.firebasestorage.app",
+            messagingSenderId: "1079895566529",
+            appId: "1:1079895566529:web:2b58b08259d16ae5f50c40"
+        };
+        const DOC_PATH = ["classProgress", "main"];   // Firestore 文件路徑
+        const SAVE_MERGE = false;              // 整包覆蓋：本 app 每次都持有完整狀態，直接覆蓋最單純、不會有 merge 語意疑慮
+
+        // 登入模式：'A'=共用帳號只輸密碼；'B'=綁 1 個 Google 帳號；'C'=綁 2 個 Google 帳號
+        const LOGIN_MODE = 'A';
+        const SHARED_EMAIL = "annychen1210@gmail.com";              // 模式 A：寫死的登入 email
+        const ALLOWED_EMAILS = ["one@gmail.com", "two@gmail.com"]; // 模式 B 取[0]；模式 C 取兩個
+        /* ================================================ */
+
+        // 啟動前檢查 config 是否已填，未填則顯示提示而非白畫面崩潰
+        if(!firebaseConfig.apiKey || !firebaseConfig.projectId){
+            document.body.innerHTML = '<div style="max-width:520px;margin:80px auto;padding:24px;font-family:sans-serif;line-height:1.7;color:#2e3a35;text-align:center">尚未填入 Firebase 設定。<br>請在原始碼「業務設定」區的 <code>firebaseConfig</code> 填入你的專案設定後再開啟。</div>';
+            throw new Error('firebaseConfig 未設定');
+        }
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const ref = doc(db, ...DOC_PATH);
+
+        let isAdmin = false, editorReady = false, dataArrived = false, errored = false, lastData = null;
+        // onSnapshot 錯誤後監聽即終止、不再恢復，故錯誤為單向：顯示後固定，需使用者重新整理。
+        function showLoadError(){ if(!document.getElementById('loadError')){ const d=document.createElement('div'); d.id='loadError'; d.textContent='載入失敗，請重新整理頁面'; d.style.cssText='position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:var(--danger);color:#fff;padding:10px 18px;border-radius:10px;z-index:2000;font-size:0.95em'; document.body.appendChild(d); } }
+
+        /* ---------- 載入 gate ---------- */
+        let readyTimer = setTimeout(markReady, 8000); // 逾時保險（僅防 Firebase 完全無回應；正常時首次 snapshot 到達即顯示）
+        function markReady(){ clearTimeout(readyTimer); document.body.classList.add("ready"); }
+
+        // 只有「已登入 + 首次資料已回 + 尚未載入」三者皆成立才灌編輯區，
+        // 避免 onAuthStateChanged 與首次 onSnapshot 到達順序不定造成的競態（以 null 灌空）。
+        function maybeLoadEditor(){ if(isAdmin && dataArrived && !editorReady) loadEditor(lastData); }
+
+        /* ---------- 通用資料層 ---------- */
+        function saveData(obj){ if(!isAdmin) return; setDoc(ref, obj, { merge: SAVE_MERGE }).catch(e=>console.warn(e)); }
+        onSnapshot(ref, snap => {
+            lastData = snap.exists() ? snap.data() : null;
+            dataArrived = true;
+            renderPublic(lastData, { error: errored });
+            maybeLoadEditor(); markReady();
+        }, err => { console.warn(err); errored = true; renderPublic(lastData, { error: true }); showLoadError(); markReady(); });
+
+        /* ---------- 授權判斷 ----------
+           注意：這只 gate 前端 UI 顯示，不是安全邊界。任何人改前端或直接打
+           Firestore 都能繞過。真正的存取控制必須寫在 Firestore 安全規則，
+           以登入者 email/uid 限制讀寫。LOGIN_MODE 與白名單只影響介面。 */
+        function isAuthorized(user){
+            if(!user) return false;
+            if(LOGIN_MODE === 'A') return user.email === SHARED_EMAIL;
+            if(LOGIN_MODE === 'B') return user.email === ALLOWED_EMAILS[0];
+            if(LOGIN_MODE === 'C') return ALLOWED_EMAILS.slice(0,2).includes(user.email);
+            return false;
+        }
+        onAuthStateChanged(auth, user => {
+            isAdmin = isAuthorized(user);
+            document.querySelectorAll('.admin-only').forEach(el => el.classList.toggle('hidden', !isAdmin));
+            maybeLoadEditor();
+        });
+
+        // 通用提示框（取代原生 alert）
+        window.showAlert = (msg) => { $('alertMsg').textContent = msg; $('alertModal').style.display = 'flex'; };
+        window.closeAlert = () => { $('alertModal').style.display = 'none'; };
+
+        // 通用輸入框（取代原生 prompt）。回傳輸入字串；取消回傳 null。Enter=確定、Esc=取消
+        window.askInput = (msg, def) => new Promise(res => {
+            const m = $('promptModal'), inp = $('promptInput'), ok = $('promptOk'), no = $('promptNo');
+            $('promptMsg').textContent = msg; inp.value = def || '';
+            m.style.display = 'flex'; setTimeout(() => { inp.focus(); inp.select(); }, 50);
+            const done = v => { m.style.display = 'none'; ok.onclick = null; no.onclick = null; inp.onkeydown = null; res(v); };
+            ok.onclick = () => done(inp.value);
+            no.onclick = () => done(null);
+            inp.onkeydown = e => { if(e.key === 'Enter') done(inp.value); else if(e.key === 'Escape') done(null); };
+        });
+
+        /* ---------- 登入 / 登出 ---------- */
+        $('loginBtn').onclick = () => {
+            if(LOGIN_MODE === 'A'){ window.openLogin(); }
+            else { signInWithPopup(auth, new GoogleAuthProvider()).catch(e=>window.showAlert("登入失敗")); }
+        };
+        $('logoutBtn').onclick = () => signOut(auth);
+
+        // 模式 A 密碼彈窗
+        window.openLogin  = () => { $('passInput').value=''; $('imeHint').style.display='none'; $('inputModal').style.display='flex'; setTimeout(()=>$('passInput').focus(),50); };
+        window.closeModal = () => { $('inputModal').style.display='none'; $('passInput').value=''; $('imeHint').style.display='none'; };
+        window.checkPass  = async () => {
+            const pw = $('passInput').value; if(!pw){ window.showAlert('請輸入密碼'); return; }
+            try { await signInWithEmailAndPassword(auth, SHARED_EMAIL, pw); window.closeModal(); }
+            catch(e){ window.showAlert("密碼錯誤"); $('passInput').value=''; $('passInput').focus(); }
+        };
+        // IME 提示（密碼欄含非英數就提示）
+        const checkIME = () => { $('imeHint').style.display = /[^\x00-\x7F]/.test($('passInput').value) ? 'block' : 'none'; };
+        $('passInput').addEventListener('keydown', e => { if(e.key === 'Enter' && !e.isComposing && e.keyCode !== 229) window.checkPass(); });
+        $('passInput').addEventListener('compositionstart', () => { $('imeHint').style.display='block'; });
+        $('passInput').addEventListener('input', e => { if(!e.isComposing) checkIME(); });
+        $('passInput').addEventListener('compositionend', checkIME);
+
+        /* ========== 業務邏輯（本 app 實作） ==========
+           資料結構（單一文件 classProgress/main）：
+           { config:{termName,start,end,subjects:[{id,name,weekdays:[1-5],color}]},
+             entries:{ 'YYYY-MM-DD': { subjectId: {progress,homework} } },
+             holidays:{ 'YYYY-MM-DD': '假日名稱' } }
+           課程進度／週進度／作業安排三個畫面共用這份資料，只是排版不同。
+        ============================================== */
+        const PALETTE = ['#b23b2e','#2e5f8a','#3f6b4c','#a8791a','#7b4b8a','#2f7a78','#5c5487','#c1743f'];
+        const WD = ['日','一','二','三','四','五','六'];
+        const pad = n => String(n).padStart(2,'0');
+        const fmt = d => d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+        const parseD = s => { const [y,m,d]=s.split('-').map(Number); return new Date(y,m-1,d); };
+        const shortD = s => { const d=parseD(s); return (d.getMonth()+1)+'/'+d.getDate(); };
+        const wdOf = s => parseD(s).getDay();
+        function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+        function schoolDates(cfg){
+            if(!cfg || !cfg.start || !cfg.end) return [];
+            const start = parseD(cfg.start), end = parseD(cfg.end);
+            const out = []; let cur = new Date(start);
+            while(cur <= end){ const wd = cur.getDay(); if(wd>=1 && wd<=5) out.push(fmt(cur)); cur.setDate(cur.getDate()+1); }
+            return out;
+        }
+        function weeksOf(dates){
+            const weeks = []; let cur = [];
+            dates.forEach(ds=>{ if(wdOf(ds)===1 && cur.length){ weeks.push(cur); cur=[]; } cur.push(ds); });
+            if(cur.length) weeks.push(cur);
+            return weeks;
+        }
+        function subjectsOnDate(cfg, ds){ const wd = wdOf(ds); return (cfg.subjects||[]).filter(s=>s.weekdays.includes(wd)); }
+        function getEntry(data, ds, sid){ return (data.entries[ds] && data.entries[ds][sid]) || {progress:'', homework:''}; }
+
+        /* ---------- renderPublic：唯讀，供未登入者查看今日／近期作業 ---------- */
+        function renderPublic(data, status){
+            const el = $('content');
+            if(status.error){ el.innerHTML = '<div class="empty">資料讀取失敗，請重新整理頁面。</div>'; return; }
+            if(!data || !data.config){ el.innerHTML = '<div class="empty">尚未建立學期資料，請登入後在「學期設定」建立。</div>'; return; }
+            const dates = schoolDates(data.config);
+            const todayStr = fmt(new Date());
+            const upcoming = dates.filter(ds => ds >= todayStr).slice(0, 5);
+            const blocks = upcoming.map(ds=>{
+                const subs = subjectsOnDate(data.config, ds).map(s=>({s,e:getEntry(data,ds,s.id)})).filter(x=>x.e.homework && x.e.homework.trim());
+                const d = parseD(ds);
+                const holiday = data.holidays && data.holidays[ds];
+                return `<div style="margin:14px 0;"><b>${(d.getMonth()+1)}/${d.getDate()}（${WD[wdOf(ds)]}）${holiday?'　'+esc(holiday):''}</b>
+                    ${subs.length ? '<ul>'+subs.map(x=>`<li>${esc(x.s.name)}：${esc(x.e.homework)}</li>`).join('')+'</ul>' : '<p class="hint" style="margin:4px 0 0;">（尚未填寫作業）</p>'}
+                </div>`;
+            }).join('');
+            el.innerHTML = `<div id="wrap" class="public-digest">
+                <div class="card section">
+                    <h2>${esc(data.config.termName || '本學期')} · 近期作業</h2>
+                    <p class="hint">此頁面公開唯讀，僅供快速查看；完整編輯請登入。</p>
+                    ${blocks || '<p class="hint">目前沒有排定的上課日。</p>'}
+                </div>
+            </div>`;
+        }
+
+        /* ---------- loadEditor：登入後、資料首次到齊時建置一次完整編輯介面 ---------- */
+        function loadEditor(data){
+            editorReady = true;
+            const local = data ? JSON.parse(JSON.stringify(data)) : { config:null, entries:{}, holidays:{} };
+            if(!local.entries) local.entries = {};
+            if(!local.holidays) local.holidays = {};
+            let saveTimer = null;
+            function persist(){ clearTimeout(saveTimer); saveTimer = setTimeout(()=>{ saveData(local); flashSaved(); }, 450); }
+            function flashSaved(){ document.querySelectorAll('.saved-flag').forEach(f=>{ f.classList.add('show'); clearTimeout(f._t); f._t=setTimeout(()=>f.classList.remove('show'),1200); }); }
+            function setEntry(ds, sid, field, val){ if(!local.entries[ds]) local.entries[ds]={}; if(!local.entries[ds][sid]) local.entries[ds][sid]={progress:'',homework:''}; local.entries[ds][sid][field]=val; persist(); }
+            function mkSubject(name, weekdays){ return { id:'s'+Math.random().toString(36).slice(2,9), name, weekdays, color: PALETTE[Math.floor(Math.random()*PALETTE.length)] }; }
+            function defaultSubjects(){
+                return [ mkSubject('國語',[1,2,3,4,5]), mkSubject('數學',[1,2,3,4,5]), mkSubject('導師時間',[1]),
+                         mkSubject('健康',[1]), mkSubject('彈性課',[2]), mkSubject('閱讀課',[3]), mkSubject('綜合',[4]), mkSubject('表達力',[5]) ];
+            }
+
+            let ui = { tab:'progress', subjectId: local.config && local.config.subjects[0] && local.config.subjects[0].id, weekIdx:0, hwOnlyFilled:true };
+            const host = $('adminArea');
+
+            function subjRowHtml(s){
+                return `<div class="subj-row" data-sid="${s.id}">
+                    <div class="swatch" data-role="swatch" style="background:${s.color};" title="換顏色"></div>
+                    <input type="text" data-role="name" value="${esc(s.name)}" placeholder="科目名稱">
+                    <div class="row" style="gap:10px;">
+                        <div class="wd-toggles">${[1,2,3,4,5].map(w=>`<button type="button" data-role="wd" data-wd="${w}" class="${s.weekdays.includes(w)?'on':''}">${WD[w]}</button>`).join('')}</div>
+                        <button type="button" class="icon-btn" data-role="del-subj" title="刪除科目">✕</button>
+                    </div>
+                </div>`;
+            }
+            function wireSubjEditor(editor, subjects){
+                editor.querySelectorAll('.subj-row').forEach(row=>{
+                    const sid = row.dataset.sid, s = subjects.find(x=>x.id===sid);
+                    row.querySelector('[data-role=name]').oninput = e=> s.name = e.target.value;
+                    row.querySelectorAll('[data-role=wd]').forEach(btn=>{
+                        btn.onclick = ()=>{ const w=Number(btn.dataset.wd); const i=s.weekdays.indexOf(w); if(i>-1) s.weekdays.splice(i,1); else s.weekdays.push(w); btn.classList.toggle('on'); };
+                    });
+                    row.querySelector('[data-role=swatch]').onclick = ()=>{ const i=PALETTE.indexOf(s.color); s.color=PALETTE[(i+1)%PALETTE.length]; row.querySelector('[data-role=swatch]').style.background=s.color; };
+                    const del = row.querySelector('[data-role=del-subj]');
+                    if(del) del.onclick = ()=>{ const idx=subjects.findIndex(x=>x.id===sid); if(idx>-1) subjects.splice(idx,1); row.remove(); };
+                });
+            }
+            function configFormHtml(cfg){
+                return `<div class="row" style="margin-bottom:14px;">
+                    <div class="field"><label>學期名稱</label><input type="text" id="f-term" placeholder="例：114學年度第2學期" value="${esc(cfg.termName||'')}"></div>
+                    <div class="field"><label>開學日</label><input type="date" id="f-start" value="${cfg.start||''}"></div>
+                    <div class="field"><label>結業日</label><input type="date" id="f-end" value="${cfg.end||''}"></div>
+                </div>
+                <div>
+                    <label style="font-size:12px; color:var(--muted); font-weight:600;">科目與上課星期</label>
+                    <div id="subj-editor">${cfg.subjects.map(s=>subjRowHtml(s)).join('')}</div>
+                    <button class="btn outline small" id="add-subj" type="button" style="margin-top:8px;">＋ 新增科目</button>
+                </div>`;
+            }
+
+            function renderApp(){
+                if(!local.config){ host.innerHTML = onboardingHtml(); bindOnboarding(); return; }
+                if(!ui.subjectId && local.config.subjects.length) ui.subjectId = local.config.subjects[0].id;
+                host.innerHTML = `<div id="wrap">
+                    <nav class="tabs">
+                        <button data-tab="progress" class="${ui.tab==='progress'?'active':''}">課程進度</button>
+                        <button data-tab="week" class="${ui.tab==='week'?'active':''}">週進度</button>
+                        <button data-tab="homework" class="${ui.tab==='homework'?'active':''}">作業安排</button>
+                        <button data-tab="settings" class="${ui.tab==='settings'?'active':''}">學期設定</button>
+                    </nav>
+                    <div id="tab-body">${tabHtml()}</div>
+                    <footer class="note">資料即時同步到 Firebase；此頁的公開版本（未登入）只會顯示近期作業摘要。</footer>
+                </div>`;
+                bindApp();
+            }
+            function onboardingHtml(){
+                return `<div id="wrap"><div class="card section">
+                    <h2 style="margin-bottom:6px;">先設定這學期</h2>
+                    <p class="hint">進度、週總表、作業摘要共用同一份資料——填一次「課程進度」，其餘畫面自動整理，換學期只要重設這裡即可。</p>
+                    ${configFormHtml({termName:'', start:'', end:'', subjects: defaultSubjects()})}
+                    <div class="row" style="margin-top:14px;"><button class="btn" id="save-setup">建立學期</button></div>
+                </div></div>`;
+            }
+            function bindOnboarding(){
+                const editor = document.getElementById('subj-editor');
+                let subjects = defaultSubjects();
+                editor.querySelectorAll('.subj-row').forEach((row,i)=> row.dataset.sid = subjects[i].id);
+                wireSubjEditor(editor, subjects);
+                document.getElementById('add-subj').onclick = ()=>{ const s=mkSubject('新科目',[]); subjects.push(s); editor.insertAdjacentHTML('beforeend', subjRowHtml(s)); wireSubjEditor(editor, subjects); };
+                document.getElementById('save-setup').onclick = ()=>{
+                    const termName = document.getElementById('f-term').value.trim();
+                    const start = document.getElementById('f-start').value, end = document.getElementById('f-end').value;
+                    if(!start || !end){ window.showAlert('請填開學日與結業日'); return; }
+                    const cleaned = subjects.filter(s=>s.name.trim() && s.weekdays.length);
+                    if(!cleaned.length){ window.showAlert('至少需要一個有名稱、有勾選星期的科目'); return; }
+                    local.config = { termName, start, end, subjects: cleaned };
+                    ui.subjectId = cleaned[0].id;
+                    saveData(local); renderApp();
+                };
+            }
+
+            function tabHtml(){
+                if(!local.config.subjects.length) return '<div class="empty">還沒有科目，請到「學期設定」新增。</div>';
+                if(ui.tab==='progress') return progressHtml();
+                if(ui.tab==='week') return weekHtml();
+                if(ui.tab==='homework') return homeworkHtml();
+                if(ui.tab==='settings') return settingsHtml();
+                return '';
+            }
+            function progressHtml(){
+                const subj = local.config.subjects.find(s=>s.id===ui.subjectId) || local.config.subjects[0];
+                const dates = schoolDates(local.config).filter(ds=>subj.weekdays.includes(wdOf(ds)));
+                let lastMonth=null, rows='';
+                dates.forEach(ds=>{
+                    const d = parseD(ds), mLabel = d.getFullYear()+'年 '+(d.getMonth()+1)+'月';
+                    if(mLabel!==lastMonth){ rows += `<div class="month-head">${mLabel}</div>`; lastMonth=mLabel; }
+                    const e = getEntry(local, ds, subj.id), isHoliday = !!(local.holidays[ds]);
+                    rows += `<div class="entry-row ${isHoliday?'holiday':''}">
+                        <div class="date-lbl">${shortD(ds)}<span class="wd">(${WD[wdOf(ds)]})</span>${isHoliday?`<span class="stamp">${esc(local.holidays[ds])}</span>`:''}</div>
+                        <textarea data-field="progress" data-sid="${subj.id}" data-date="${ds}" placeholder="今天的進度…">${esc(e.progress)}</textarea>
+                        <textarea data-field="homework" data-sid="${subj.id}" data-date="${ds}" placeholder="今天的作業…">${esc(e.homework)}</textarea>
+                    </div>`;
+                });
+                return `<div class="chips">
+                    ${local.config.subjects.map(s=>`<span class="chip ${s.id===subj.id?'active':''}" style="color:${s.color}" data-subj="${s.id}"><span class="dot" style="background:${s.color}"></span>${esc(s.name)}</span>`).join('')}
+                    <span class="saved-flag">已同步</span>
+                </div>
+                <div class="card section">
+                    <h2 style="font-size:16px;">${esc(subj.name)}　<span class="hint" style="font-weight:400;">上課日：${subj.weekdays.map(w=>WD[w]).join('、')}</span></h2>
+                    ${dates.length ? rows : '<p class="hint">此科目在學期範圍內沒有排定的上課日。</p>'}
+                </div>`;
+            }
+            function weekHtml(){
+                const weeks = weeksOf(schoolDates(local.config));
+                if(!weeks.length) return '<div class="empty">尚無日期</div>';
+                if(ui.weekIdx>=weeks.length) ui.weekIdx=weeks.length-1;
+                if(ui.weekIdx<0) ui.weekIdx=0;
+                const week = weeks[ui.weekIdx];
+                const cols = week.map(ds=>{
+                    const subs = subjectsOnDate(local.config, ds);
+                    const isHoliday = !!(local.holidays[ds]);
+                    const body = subs.length ? subs.map(s=>{
+                        const e = getEntry(local, ds, s.id);
+                        return `<div class="subj-card" style="--c:${s.color};"><div class="sname">${esc(s.name)}</div>
+                            <textarea data-field="progress" data-sid="${s.id}" data-date="${ds}" placeholder="（尚未填寫）">${esc(e.progress)}</textarea></div>`;
+                    }).join('') : '<div class="day-empty">這天沒有排課</div>';
+                    return `<div class="day-col"><div class="day-head"><span class="d">${shortD(ds)}</span><span class="w">週${WD[wdOf(ds)]}${isHoliday?' · '+esc(local.holidays[ds]):''}</span></div><div class="day-body">${body}</div></div>`;
+                }).join('');
+                return `<div class="week-nav">
+                    <button class="icon-btn" id="wk-prev" ${ui.weekIdx<=0?'disabled':''}>← 上一週</button>
+                    <div class="week-range">第${ui.weekIdx+1}週　${shortD(week[0])} – ${shortD(week[week.length-1])}<span class="saved-flag">已同步</span></div>
+                    <button class="icon-btn" id="wk-next" ${ui.weekIdx>=weeks.length-1?'disabled':''}>下一週 →</button>
+                </div>
+                <div class="week-grid">${cols}</div>
+                <p class="hint" style="margin-top:12px;">這裡的進度欄位與「課程進度」是同一份資料，互相同步。</p>`;
+            }
+            function homeworkHtml(){
+                const dates = schoolDates(local.config);
+                const blocks = dates.map(ds=>{
+                    const subs = subjectsOnDate(local.config, ds).map(s=>({s,e:getEntry(local,ds,s.id)})).filter(x=>x.e.homework && x.e.homework.trim());
+                    if(ui.hwOnlyFilled && !subs.length) return '';
+                    const isHoliday = !!(local.holidays[ds]); const d = parseD(ds);
+                    return `<div class="card hw-day" data-date="${ds}">
+                        <div class="hw-day-head">
+                            <div class="d">${(d.getMonth()+1)}/${d.getDate()}（${WD[wdOf(ds)]}）${isHoliday?` <span class="stamp">${esc(local.holidays[ds])}</span>`:''}</div>
+                            <button class="btn small outline" data-copy="${ds}" ${subs.length?'':'disabled'}>複製今日作業</button>
+                        </div>
+                        ${subs.length ? `<ul class="hw-list">${subs.map(x=>`<li><b>${esc(x.s.name)}：</b>${esc(x.e.homework)}</li>`).join('')}</ul>` : '<p class="hint">（無作業）</p>'}
+                    </div>`;
+                }).join('');
+                return `<div class="toggle-row"><label><input type="checkbox" id="hw-filter" ${ui.hwOnlyFilled?'checked':''}> 只顯示有作業的日期</label><span class="saved-flag">已複製</span></div>
+                    ${blocks || '<p class="hint">目前沒有符合條件的日期。</p>'}`;
+            }
+            function settingsHtml(){
+                const holidayRows = Object.keys(local.holidays).sort().map(ds=>`
+                    <div class="holiday-item"><span>${shortD(ds)}（${WD[wdOf(ds)]}）</span><span class="lbl">${esc(local.holidays[ds])}</span><button class="icon-btn" data-del-holiday="${ds}">✕</button></div>
+                `).join('') || '<p class="hint">尚未標記任何假日。</p>';
+                return `<div class="card section">
+                    <h2 style="font-size:16px; margin-bottom:10px;">學期與科目</h2>
+                    ${configFormHtml(local.config)}
+                    <div class="row" style="margin-top:14px;"><button class="btn" id="save-config">儲存設定</button><span class="hint">調整日期或科目不會刪除已填的進度／作業資料。</span></div>
+                </div>
+                <div class="card section">
+                    <h2 style="font-size:16px; margin-bottom:6px;">標記假日</h2>
+                    <p class="hint">選一個日期並輸入假日名稱，系統會把當天所有排課科目的進度自動填上這個名稱，作業欄留空，之後仍可個別修改。</p>
+                    <div class="row" style="margin-top:10px;"><input type="date" id="hol-date"><input type="text" id="hol-label" placeholder="例：教師節補假"><button class="btn small" id="hol-apply">套用</button></div>
+                    <div class="holiday-list">${holidayRows}</div>
+                </div>
+                <div class="card section">
+                    <h2 style="font-size:16px; margin-bottom:10px;">備份與重設</h2>
+                    <div class="row">
+                        <button class="btn outline small" id="export-btn">匯出備份 (JSON)</button>
+                        <label class="btn outline small" style="cursor:pointer;">匯入備份 (JSON)<input type="file" id="import-file" accept="application/json" style="display:none;"></label>
+                        <button class="btn danger small" id="reset-btn">清除所有資料重新開始</button>
+                    </div>
+                </div>`;
+            }
+
+            function autoGrow(ta){ ta.style.height='auto'; ta.style.height=(ta.scrollHeight)+'px'; }
+            function bindApp(){
+                document.querySelectorAll('nav.tabs button').forEach(b=> b.onclick = ()=>{ ui.tab=b.dataset.tab; renderApp(); });
+                if(ui.tab==='progress') bindProgress();
+                if(ui.tab==='week') bindWeek();
+                if(ui.tab==='homework') bindHomework();
+                if(ui.tab==='settings') bindSettings();
+            }
+            function bindProgress(){
+                document.querySelectorAll('.chip').forEach(c=> c.onclick = ()=>{ ui.subjectId=c.dataset.subj; renderApp(); });
+                document.querySelectorAll('#tab-body textarea[data-field]').forEach(ta=>{ autoGrow(ta); ta.oninput=()=>{ autoGrow(ta); setEntry(ta.dataset.date, ta.dataset.sid, ta.dataset.field, ta.value); flashSaved(); }; });
+            }
+            function bindWeek(){
+                const weeks = weeksOf(schoolDates(local.config));
+                const prev=document.getElementById('wk-prev'), next=document.getElementById('wk-next');
+                if(prev) prev.onclick = ()=>{ ui.weekIdx=Math.max(0,ui.weekIdx-1); renderApp(); };
+                if(next) next.onclick = ()=>{ ui.weekIdx=Math.min(weeks.length-1,ui.weekIdx+1); renderApp(); };
+                document.querySelectorAll('#tab-body textarea[data-field]').forEach(ta=>{ autoGrow(ta); ta.oninput=()=>{ autoGrow(ta); setEntry(ta.dataset.date, ta.dataset.sid, ta.dataset.field, ta.value); flashSaved(); }; });
+            }
+            function bindHomework(){
+                const filter = document.getElementById('hw-filter');
+                if(filter) filter.onchange = ()=>{ ui.hwOnlyFilled=filter.checked; renderApp(); };
+                document.querySelectorAll('[data-copy]').forEach(btn=>{
+                    btn.onclick = async ()=>{
+                        const ds = btn.dataset.copy;
+                        const subs = subjectsOnDate(local.config, ds).map(s=>({s,e:getEntry(local,ds,s.id)})).filter(x=>x.e.homework && x.e.homework.trim());
+                        const d = parseD(ds);
+                        let text = (d.getMonth()+1)+'/'+d.getDate()+'（'+WD[wdOf(ds)]+'）作業\n' + subs.map(x=>x.s.name+'：'+x.e.homework).join('\n');
+                        try{ await navigator.clipboard.writeText(text); }
+                        catch(e){ const ta=document.createElement('textarea'); ta.value=text; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove(); }
+                        flashSaved();
+                    };
+                });
+            }
+            function bindSettings(){
+                const editor = document.getElementById('subj-editor');
+                let subjects = local.config.subjects.map(s=>({...s, weekdays:[...s.weekdays]}));
+                wireSubjEditor(editor, subjects);
+                document.getElementById('add-subj').onclick = ()=>{ const s=mkSubject('新科目',[]); subjects.push(s); editor.insertAdjacentHTML('beforeend', subjRowHtml(s)); wireSubjEditor(editor, subjects); };
+                document.getElementById('save-config').onclick = ()=>{
+                    const termName = document.getElementById('f-term').value.trim();
+                    const start = document.getElementById('f-start').value, end = document.getElementById('f-end').value;
+                    if(!start || !end){ window.showAlert('請填開學日與結業日'); return; }
+                    const cleaned = subjects.filter(s=>s.name.trim() && s.weekdays.length);
+                    if(!cleaned.length){ window.showAlert('至少需要一個有名稱、有勾選星期的科目'); return; }
+                    local.config = { termName, start, end, subjects: cleaned };
+                    if(!cleaned.find(s=>s.id===ui.subjectId)) ui.subjectId = cleaned[0].id;
+                    ui.weekIdx = 0;
+                    saveData(local); renderApp();
+                };
+                document.getElementById('hol-apply').onclick = ()=>{
+                    const ds = document.getElementById('hol-date').value, label = document.getElementById('hol-label').value.trim();
+                    if(!ds || !label){ window.showAlert('請選日期並輸入假日名稱'); return; }
+                    local.holidays[ds] = label;
+                    subjectsOnDate(local.config, ds).forEach(s=> setEntry(ds, s.id, 'progress', label));
+                    saveData(local); renderApp();
+                };
+                document.querySelectorAll('[data-del-holiday]').forEach(btn=> btn.onclick = ()=>{ delete local.holidays[btn.dataset.delHoliday]; saveData(local); renderApp(); });
+                document.getElementById('export-btn').onclick = ()=>{
+                    const blob = new Blob([JSON.stringify(local, null, 2)], {type:'application/json'});
+                    const url = URL.createObjectURL(blob); const a = document.createElement('a');
+                    a.href = url; a.download = (local.config.termName||'班級進度手帳')+'-備份.json'; a.click(); URL.revokeObjectURL(url);
+                };
+                document.getElementById('import-file').onchange = (e)=>{
+                    const file = e.target.files[0]; if(!file) return;
+                    const reader = new FileReader();
+                    reader.onload = ()=>{
+                        try{
+                            const parsed = JSON.parse(reader.result);
+                            if(!parsed.config) throw new Error('格式不正確');
+                            local.config = parsed.config; local.entries = parsed.entries||{}; local.holidays = parsed.holidays||{};
+                            ui = { tab:'progress', subjectId: local.config.subjects[0] && local.config.subjects[0].id, weekIdx:0, hwOnlyFilled:true };
+                            saveData(local); renderApp();
+                        }catch(err){ window.showAlert('匯入失敗：檔案格式不正確'); }
+                    };
+                    reader.readAsText(file);
+                };
+                document.getElementById('reset-btn').onclick = ()=>{
+                    if(!confirm('確定要清除所有資料嗎？此動作無法復原。')) return;
+                    local.config = null; local.entries = {}; local.holidays = {};
+                    ui = { tab:'progress', subjectId:null, weekIdx:0, hwOnlyFilled:true };
+                    saveData(local); renderApp();
+                };
+            }
+
+            renderApp();
+        }
+        /* ================================================= */
+    </script>
+</body>
+</html>
