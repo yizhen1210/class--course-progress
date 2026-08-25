@@ -75,87 +75,105 @@
            以下為本 app 業務內容專用樣式（只新增，不改上面共用命名）
            ========================================================= */
         header { position:relative; display:flex; align-items:center; justify-content:center; padding:20px; border-bottom:1px solid var(--line); }
-        header h1 { font-size:30px; margin:0; text-align:center; }
+        header h1 { font-size:34.5px; margin:0; text-align:center; }
         .header-btn { position:absolute; right:20px; top:50%; transform:translateY(-50%); }
         #wrap { max-width:980px; margin:0 auto; padding:0 20px 60px; }
         .card { background:var(--surface); border:1px solid var(--line); border-radius:14px; box-shadow:0 1px 0 rgba(0,0,0,.04); }
         .section { padding:18px 20px; margin:16px 0; }
-        .hint { font-size:12.5px; color:var(--muted); line-height:1.7; }
+        .hint { font-size:14.5px; color:var(--muted); line-height:1.7; }
         .row { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
         .field { display:flex; flex-direction:column; gap:4px; }
-        .field label { font-size:12px; color:var(--muted); font-weight:600; }
+        .field label { font-size:14px; color:var(--muted); font-weight:600; }
         input[type=text], input[type=date], textarea, select {
-            font-family:inherit; font-size:14px; color:var(--text);
+            font-family:inherit; font-size:16px; color:var(--text);
             background:#fff; border:1px solid var(--line); border-radius:8px; padding:7px 9px;
         }
         input[type=text]:focus, input[type=date]:focus, textarea:focus {
             outline:none; border-color:var(--accent); box-shadow:0 0 10px 2px var(--focus-glow);
         }
         textarea { resize:vertical; font-family:inherit; width:100%; }
-        .btn.small { padding:5px 12px; font-size:12.5px; }
+        .btn.small { padding:5px 12px; font-size:14.5px; }
         .btn.danger { background:var(--danger); border-color:var(--danger); }
-        button.icon-btn { background:none; border:1px solid var(--line); border-radius:8px; cursor:pointer; padding:5px 9px; font-size:13px; color:var(--text); }
-        button.icon-btn:hover { background:var(--bg); }
+        button.icon-btn { background:none; border:1px solid var(--line); border-radius:8px; cursor:pointer; padding:5px 9px; font-size:15px; color:var(--text); }
+        button.icon-btn:hover:not(:disabled) { background:var(--accent); color:#fff; border-color:var(--accent); }
+        button.icon-btn:disabled { opacity:.4; cursor:default; }
         .empty { text-align:center; padding:40px 20px; color:var(--muted); }
 
         nav.tabs { display:flex; gap:4px; margin:14px 0 6px; border-bottom:2px solid var(--line); flex-wrap:wrap; overflow:visible; }
-        nav.tabs button { font-family:inherit; font-weight:700; font-size:14.5px; background:none; border:none; cursor:pointer; color:var(--muted); padding:9px 14px 11px; position:relative; white-space:nowrap; }
+        nav.tabs button { font-family:inherit; font-weight:700; font-size:16.5px; background:none; border:none; cursor:pointer; color:var(--muted); padding:9px 14px 11px; position:relative; white-space:nowrap; }
         nav.tabs button.active { color:var(--text); }
         nav.tabs button.active::after { content:""; position:absolute; left:8px; right:8px; bottom:-2px; height:3px; background:var(--accent); border-radius:2px 2px 0 0; }
 
         .chips { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px; }
-        .chip { display:inline-flex; align-items:center; gap:6px; padding:6px 12px; border-radius:999px; font-size:13.5px; font-weight:700; cursor:pointer; border:2px solid transparent; background:var(--bg); }
+        .chip { display:inline-flex; align-items:center; gap:6px; padding:6px 12px; border-radius:999px; font-size:15.5px; font-weight:700; cursor:pointer; border:2px solid transparent; background:var(--bg); }
         .chip .dot { width:8px; height:8px; border-radius:50%; }
         .chip.active { border-color:currentColor; background:#fff; }
 
         .subj-row { display:grid; grid-template-columns:22px 1fr auto; gap:10px; align-items:center; padding:8px 0; border-bottom:1px dashed var(--line); }
         .subj-row:last-child { border-bottom:none; }
         .wd-toggles { display:flex; gap:4px; }
-        .wd-toggles button { width:28px; height:28px; border-radius:6px; border:1px solid var(--line); background:#fff; font-size:12.5px; cursor:pointer; color:var(--muted); font-weight:700; }
+        .wd-toggles button { width:28px; height:28px; border-radius:6px; border:1px solid var(--line); background:#fff; font-size:14.5px; cursor:pointer; color:var(--muted); font-weight:700; }
         .wd-toggles button.on { background:var(--text); color:#fff; border-color:var(--text); }
         .swatch { width:20px; height:20px; border-radius:50%; border:2px solid #fff; box-shadow:0 0 0 1px var(--line); cursor:pointer; }
 
-        .month-head { font-weight:700; font-size:15px; margin:16px 0 6px; }
+        .month-head { font-weight:700; font-size:17px; margin:16px 0 6px; }
         .month-head:first-child { margin-top:0; }
         .entry-row { display:grid; grid-template-columns:78px 1fr 1fr; gap:10px; align-items:start; padding:8px 6px; border-radius:8px; }
         .entry-row.holiday { background:color-mix(in srgb, var(--holiday) 10%, white); }
         .entry-row + .entry-row { border-top:1px solid var(--bg); }
-        .date-lbl { font-weight:700; font-size:13px; padding-top:8px; display:flex; flex-direction:column; gap:2px; }
-        .date-lbl .wd { font-weight:500; color:var(--muted); font-size:11.5px; }
-        .stamp { display:inline-block; font-size:10px; font-weight:700; color:var(--holiday); border:1.5px solid var(--holiday); border-radius:5px; padding:1px 4px; transform:rotate(-6deg); width:fit-content; }
+        .date-lbl { font-weight:700; font-size:15px; padding-top:8px; display:flex; flex-direction:column; gap:2px; }
+        .date-lbl .wd { font-weight:500; color:var(--muted); font-size:13px; }
+        .stamp { display:inline-block; font-size:11.5px; font-weight:700; color:var(--holiday); border:1.5px solid var(--holiday); border-radius:5px; padding:1px 4px; transform:rotate(-6deg); width:fit-content; }
         .entry-row textarea { min-height:34px; }
 
         .week-nav { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; gap:10px; flex-wrap:wrap; }
-        .week-range { font-weight:700; font-size:16px; }
+        .week-range { font-weight:700; font-size:18.5px; }
         .week-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:10px; }
         @media (max-width:820px) { .week-grid { grid-template-columns:1fr; } }
-        .day-col { background:var(--surface); border:1px solid var(--line); border-radius:10px; overflow:hidden; }
-        .day-head { padding:9px 10px; border-bottom:1px solid var(--line); background:var(--bg); display:flex; justify-content:space-between; align-items:center; }
-        .day-head .d { font-weight:700; font-size:13.5px; }
-        .day-head .w { font-size:11px; color:var(--muted); }
+
+        /* ---- 手機版整體適應 ---- */
+        @media (max-width:640px) {
+            header { padding:16px 56px; }
+            header h1 { font-size:24px; }
+            .header-btn { right:10px; padding:6px 14px; font-size:13px; }
+            #wrap { padding:0 12px 40px; }
+            .section { padding:14px 14px; margin:12px 0; }
+            input[type=text], input[type=date], textarea, select { font-size:16px; } /* 避免 iOS 對焦自動縮放 */
+            .entry-row { grid-template-columns:1fr; gap:6px; }
+            .date-lbl { flex-direction:row; align-items:center; gap:8px; padding-top:0; }
+            .subj-row { grid-template-columns:1fr; row-gap:8px; }
+            .subj-row .row { justify-content:space-between; }
+            .week-nav { flex-direction:column; align-items:stretch; gap:8px; text-align:center; }
+            .hw-day-head { flex-direction:column; align-items:flex-start; }
+            nav.tabs button { padding:8px 10px 10px; font-size:15px; }
+        }
+        .day-col { background:var(--surface); border:2px solid var(--line); border-radius:10px; overflow:hidden; }
+        .day-head { padding:9px 10px; border-bottom:2px solid var(--line); background:color-mix(in srgb, var(--accent) 12%, var(--surface)); display:flex; justify-content:space-between; align-items:center; }
+        .day-head .d { font-weight:700; font-size:15.5px; }
+        .day-head .w { font-size:12.5px; color:var(--muted); }
         .day-body { padding:8px; display:flex; flex-direction:column; gap:8px; min-height:50px; }
         .subj-card { border-radius:8px; padding:7px 8px; border-left:4px solid var(--c); background:color-mix(in srgb, var(--c) 8%, white); }
-        .subj-card .sname { font-size:11.5px; font-weight:700; color:var(--c); }
-        .subj-card textarea { width:100%; min-height:30px; border:none; background:transparent; padding:2px 0; font-size:13px; }
+        .subj-card .sname { font-size:13px; font-weight:700; color:var(--c); }
+        .subj-card textarea { width:100%; min-height:30px; border:none; background:transparent; padding:2px 0; font-size:15px; }
         .subj-card textarea:focus { outline:none; box-shadow:none; }
-        .day-empty { font-size:12px; color:var(--muted); padding:10px 4px; }
+        .day-empty { font-size:14px; color:var(--muted); padding:10px 4px; }
 
         .hw-day { padding:14px 16px; margin-bottom:10px; }
         .hw-day-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; flex-wrap:wrap; gap:8px; }
-        .hw-day-head .d { font-weight:700; font-size:15.5px; }
+        .hw-day-head .d { font-weight:700; font-size:18px; }
         .hw-list { list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:5px; }
-        .hw-list li { font-size:13.5px; padding-left:14px; position:relative; }
+        .hw-list li { font-size:15.5px; padding-left:14px; position:relative; }
         .hw-list li::before { content:"·"; position:absolute; left:2px; font-weight:900; }
-        .toggle-row { display:flex; align-items:center; gap:8px; margin-bottom:14px; font-size:13px; color:var(--muted); }
+        .toggle-row { display:flex; align-items:center; gap:8px; margin-bottom:14px; font-size:15px; color:var(--muted); }
         .holiday-list { display:flex; flex-direction:column; gap:6px; margin-top:10px; }
-        .holiday-item { display:flex; gap:8px; align-items:center; font-size:13px; background:var(--bg); border-radius:8px; padding:6px 9px; }
+        .holiday-item { display:flex; gap:8px; align-items:center; font-size:15px; background:var(--bg); border-radius:8px; padding:6px 9px; }
         .holiday-item .lbl { flex:1; }
-        .saved-flag { font-size:11px; color:var(--muted); margin-left:6px; opacity:0; transition:opacity .3s; }
+        .saved-flag { font-size:12.5px; color:var(--muted); margin-left:6px; opacity:0; transition:opacity .3s; }
         .saved-flag.show { opacity:1; }
-        .public-digest h2 { font-size:17px; margin:0 0 4px; }
+        .public-digest h2 { font-size:19.5px; margin:0 0 4px; }
         .public-digest ul { margin:6px 0 0; padding-left:18px; }
-        .public-digest li { font-size:13.5px; margin:3px 0; }
-        footer.note { margin-top:24px; font-size:11px; color:var(--muted); text-align:center; }
+        .public-digest li { font-size:15.5px; margin:3px 0; }
+        footer.note { margin-top:24px; font-size:12.5px; color:var(--muted); text-align:center; }
     </style>
 </head>
 <body>
@@ -335,7 +353,7 @@
              holidays:{ 'YYYY-MM-DD': '假日名稱' } }
            課程進度／週進度／作業安排三個畫面共用這份資料，只是排版不同。
         ============================================== */
-        const PALETTE = ['#7a6c96','#5c7f8a','#8a6a4a','#6a8a5c','#8a5a73','#4a7a8a','#8a7a4a','#5a5c8a'];
+        const PALETTE = ['#e0464f','#2f7fd1','#2fa84f','#e0872e','#8b5cf6','#14958f','#c9a227','#d6499c'];
         const WD = ['日','一','二','三','四','五','六'];
         const pad = n => String(n).padStart(2,'0');
         const fmt = d => d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
@@ -380,7 +398,7 @@
                 const body = subs.length ? subs.map(s=>{
                     const e = getEntry(data, ds, s.id);
                     return `<div class="subj-card" style="--c:${s.color};"><div class="sname">${esc(s.name)}</div>
-                        <p style="margin:2px 0 0; font-size:13px;">${e.progress ? esc(e.progress) : '<span class="hint">（尚未填寫）</span>'}</p></div>`;
+                        <p style="margin:2px 0 0; font-size:15px;">${e.progress ? esc(e.progress) : '<span class="hint">（尚未填寫）</span>'}</p></div>`;
                 }).join('') : '<div class="day-empty">這天沒有排課</div>';
                 return `<div class="day-col" style="${isToday?'outline:2px solid var(--accent);':''}">
                     <div class="day-head"><span class="d">${shortD(ds)}</span><span class="w">週${WD[wdOf(ds)]}${holiday?` · <span style="color:var(--holiday); font-weight:700;">${esc(holiday)}</span>`:''}</span></div>
@@ -459,7 +477,7 @@
                     <div class="field"><label>結業日</label><input type="date" id="f-end" value="${cfg.end||''}"></div>
                 </div>
                 <div>
-                    <label style="font-size:12px; color:var(--muted); font-weight:600;">科目與上課星期</label>
+                    <label style="font-size:14px; color:var(--muted); font-weight:600;">科目與上課星期</label>
                     <div id="subj-editor">${cfg.subjects.map(s=>subjRowHtml(s)).join('')}</div>
                     <button class="btn outline small" id="add-subj" type="button" style="margin-top:8px;">＋ 新增科目</button>
                 </div>`;
@@ -533,7 +551,7 @@
                     <span class="saved-flag">已同步</span>
                 </div>
                 <div class="card section">
-                    <h2 style="font-size:16px;">${esc(subj.name)}　<span class="hint" style="font-weight:400;">上課日：${subj.weekdays.map(w=>WD[w]).join('、')}</span></h2>
+                    <h2 style="font-size:18.5px;">${esc(subj.name)}　<span class="hint" style="font-weight:400;">上課日：${subj.weekdays.map(w=>WD[w]).join('、')}</span></h2>
                     ${dates.length ? rows : '<p class="hint">此科目在學期範圍內沒有排定的上課日。</p>'}
                 </div>`;
             }
@@ -583,18 +601,18 @@
                     <div class="holiday-item"><span>${shortD(ds)}（${WD[wdOf(ds)]}）</span><span class="lbl">${esc(local.holidays[ds])}</span><button class="icon-btn" data-del-holiday="${ds}">✕</button></div>
                 `).join('') || '<p class="hint">尚未標記任何假日。</p>';
                 return `<div class="card section">
-                    <h2 style="font-size:16px; margin-bottom:10px;">學期與科目</h2>
+                    <h2 style="font-size:18.5px; margin-bottom:10px;">學期與科目</h2>
                     ${configFormHtml(local.config)}
                     <div class="row" style="margin-top:14px;"><button class="btn" id="save-config">儲存設定</button><span class="hint">調整日期或科目不會刪除已填的進度／作業資料。</span></div>
                 </div>
                 <div class="card section">
-                    <h2 style="font-size:16px; margin-bottom:6px;">標記假日</h2>
+                    <h2 style="font-size:18.5px; margin-bottom:6px;">標記假日</h2>
                     <p class="hint">選一個日期並輸入假日名稱，系統會把當天所有排課科目的進度自動填上這個名稱，作業欄留空，之後仍可個別修改。</p>
                     <div class="row" style="margin-top:10px;"><input type="date" id="hol-date"><input type="text" id="hol-label" placeholder="例：教師節補假"><button class="btn small" id="hol-apply">套用</button></div>
                     <div class="holiday-list">${holidayRows}</div>
                 </div>
                 <div class="card section">
-                    <h2 style="font-size:16px; margin-bottom:10px;">備份與重設</h2>
+                    <h2 style="font-size:18.5px; margin-bottom:10px;">備份與重設</h2>
                     <div class="row">
                         <button class="btn outline small" id="export-btn">匯出備份 (JSON)</button>
                         <label class="btn outline small" style="cursor:pointer;">匯入備份 (JSON)<input type="file" id="import-file" accept="application/json" style="display:none;"></label>
