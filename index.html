@@ -115,6 +115,7 @@
         .wd-toggles { display:flex; gap:4px; }
         .wd-toggles button { width:28px; height:28px; border-radius:6px; border:1px solid var(--line); background:#fff; font-size:14.5px; cursor:pointer; color:var(--muted); font-weight:700; }
         .wd-toggles button.on { background:var(--text); color:#fff; border-color:var(--text); }
+        .wd-toggles button.hw { background:var(--accent); color:#fff; border-color:var(--accent); }
         .swatch { width:20px; height:20px; border-radius:50%; border:2px solid #fff; box-shadow:0 0 0 1px var(--line); cursor:pointer; }
 
         .month-head { font-weight:700; font-size:17px; margin:16px 0 6px; }
@@ -122,9 +123,9 @@
         .entry-row { display:grid; grid-template-columns:78px 1fr 1fr; gap:10px; align-items:start; padding:8px 6px; border-radius:8px; }
         .entry-row.holiday { background:color-mix(in srgb, var(--holiday) 10%, white); }
         .entry-row + .entry-row { border-top:1px solid var(--bg); }
-        .date-lbl { font-weight:700; font-size:15px; padding-top:8px; display:flex; flex-direction:column; gap:2px; }
+        .date-lbl { font-weight:700; font-size:15px; padding-top:8px; display:flex; flex-direction:column; align-items:flex-start; gap:2px; }
         .date-lbl .wd { font-weight:500; color:var(--muted); font-size:13px; }
-        .stamp { display:inline-block; font-size:11.5px; font-weight:700; color:var(--holiday); border:1.5px solid var(--holiday); border-radius:5px; padding:1px 4px; transform:rotate(-6deg); width:fit-content; }
+        .stamp { display:inline-block; align-self:flex-start; font-size:11.5px; font-weight:700; color:var(--holiday); border:1.5px solid var(--holiday); border-radius:5px; padding:1px 6px; transform:rotate(-6deg); width:fit-content; max-width:fit-content; white-space:pre-line; text-align:center; line-height:1.25; }
         .stamp.exam { color:var(--exam); border-color:var(--exam); transform:rotate(4deg); }
         .entry-row.exam { background:color-mix(in srgb, var(--exam) 10%, white); }
         .entry-row textarea { min-height:34px; }
@@ -157,6 +158,7 @@
         .day-body { padding:8px; display:flex; flex-direction:column; gap:8px; min-height:50px; }
         .subj-card { border-radius:8px; padding:7px 8px; border-left:4px solid var(--c); background:color-mix(in srgb, var(--c) 8%, white); }
         .subj-card .sname { font-size:13px; font-weight:700; color:var(--c); }
+        .tag-hwonly { display:inline-block; align-self:flex-start; font-size:10px; font-weight:700; color:var(--accent); background:color-mix(in srgb, var(--accent) 15%, white); border-radius:4px; padding:1px 5px; width:fit-content; max-width:fit-content; }
         .subj-card textarea { width:100%; min-height:30px; border:none; background:transparent; padding:2px 0; font-size:15px; }
         .subj-card textarea:focus { outline:none; box-shadow:none; }
         .day-empty { font-size:14px; color:var(--muted); padding:10px 4px; }
@@ -364,6 +366,18 @@
         const shortD = s => { const d=parseD(s); return (d.getMonth()+1)+'/'+d.getDate(); };
         const wdOf = s => parseD(s).getDay();
         function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+        // 考試標籤自動換行：「國、自期中考」→「國、自」換行「期中考」，方框內文字置中（CSS white-space:pre-line 負責換行）
+        function formatExamLabel(label){
+            const m = String(label||'').match(/^(.*?)(期中考|期末考)$/);
+            return (m && m[1]) ? (m[1] + '\n' + m[2]) : label;
+        }
+        // 假日標籤自動換行：超過 5 個字且以「放假／補假」結尾時，拆成「節日名稱」換行「放假／補假」
+        function formatHolidayLabel(label){
+            const s = String(label||'');
+            if(s.length <= 5) return s;
+            const m = s.match(/^(.*?)(放假|補假)$/);
+            return (m && m[1]) ? (m[1] + '\n' + m[2]) : s;
+        }
 
         function schoolDates(cfg){
             if(!cfg || !cfg.start || !cfg.end) return [];
@@ -379,6 +393,11 @@
             return weeks;
         }
         function subjectsOnDate(cfg, ds){ const wd = wdOf(ds); return (cfg.subjects||[]).filter(s=>s.weekdays.includes(wd)); }
+        // 作業安排／唯讀摘要用：包含正常上課日 + 該科目「只交作業」的星期
+        function subjectsForHomework(cfg, ds){
+            const wd = wdOf(ds);
+            return (cfg.subjects||[]).filter(s=> s.weekdays.includes(wd) || (s.hwOnly||[]).includes(wd));
+        }
         function getEntry(data, ds, sid){ return (data.entries[ds] && data.entries[ds][sid]) || {progress:'', homework:''}; }
 
         /* ---------- renderPublic：唯讀，供未登入者查看今日／近期作業 ---------- */
@@ -405,17 +424,17 @@
                         <p style="margin:2px 0 0; font-size:15px;">${e.progress ? esc(e.progress) : '<span class="hint">（尚未填寫）</span>'}</p></div>`;
                 }).join('') : '<div class="day-empty">這天沒有排課</div>';
                 return `<div class="day-col" style="${isToday?'outline:2px solid var(--accent);':''}">
-                    <div class="day-head"><span class="d">${shortD(ds)}</span><span class="w">週${WD[wdOf(ds)]}${holiday?` · <span style="color:var(--holiday); font-weight:700;">${esc(holiday)}</span>`:''}${exam?` · <span style="color:var(--exam); font-weight:700;">${esc(exam)}</span>`:''}</span></div>
+                    <div class="day-head"><span class="d">${shortD(ds)}</span><span class="w">週${WD[wdOf(ds)]}${holiday?` · <span style="color:var(--holiday); font-weight:700;">${esc(formatHolidayLabel(holiday))}</span>`:''}${exam?` · <span style="color:var(--exam); font-weight:700;">${esc(formatExamLabel(exam))}</span>`:''}</span></div>
                     <div class="day-body">${body}</div>
                 </div>`;
             }).join('');
 
             const upcoming = dates.filter(ds => ds >= todayStr).slice(0, 5);
             const blocks = upcoming.map(ds=>{
-                const subs = subjectsOnDate(data.config, ds).map(s=>({s,e:getEntry(data,ds,s.id)})).filter(x=>x.e.homework && x.e.homework.trim());
+                const subs = subjectsForHomework(data.config, ds).map(s=>({s,e:getEntry(data,ds,s.id)})).filter(x=>x.e.homework && x.e.homework.trim());
                 const d = parseD(ds);
                 const holiday = data.holidays && data.holidays[ds];
-                return `<div style="margin:14px 0;"><b>${(d.getMonth()+1)}/${d.getDate()}（${WD[wdOf(ds)]}）${holiday?'　'+esc(holiday):''}</b>
+                return `<div style="margin:14px 0;"><b>${(d.getMonth()+1)}/${d.getDate()}（${WD[wdOf(ds)]}）${holiday?'　'+esc(formatHolidayLabel(holiday)):''}</b>
                     ${subs.length ? '<ul>'+subs.map(x=>`<li>${esc(x.s.name)}：${esc(x.e.homework)}</li>`).join('')+'</ul>' : '<p class="hint" style="margin:4px 0 0;">（尚未填寫作業）</p>'}
                 </div>`;
             }).join('');
@@ -444,7 +463,7 @@
             function persist(){ clearTimeout(saveTimer); saveTimer = setTimeout(()=>{ saveData(local); flashSaved(); }, 450); }
             function flashSaved(){ document.querySelectorAll('.saved-flag').forEach(f=>{ f.classList.add('show'); clearTimeout(f._t); f._t=setTimeout(()=>f.classList.remove('show'),1200); }); }
             function setEntry(ds, sid, field, val){ if(!local.entries[ds]) local.entries[ds]={}; if(!local.entries[ds][sid]) local.entries[ds][sid]={progress:'',homework:''}; local.entries[ds][sid][field]=val; persist(); }
-            function mkSubject(name, weekdays){ return { id:'s'+Math.random().toString(36).slice(2,9), name, weekdays, color: PALETTE[Math.floor(Math.random()*PALETTE.length)] }; }
+            function mkSubject(name, weekdays, hwOnly){ return { id:'s'+Math.random().toString(36).slice(2,9), name, weekdays, hwOnly: hwOnly||[], color: PALETTE[Math.floor(Math.random()*PALETTE.length)] }; }
             function defaultSubjects(){
                 return [ mkSubject('國語',[1,2,3,4,5]), mkSubject('數學',[1,2,3,4,5]), mkSubject('導師時間',[1]),
                          mkSubject('健康',[1]), mkSubject('彈性課',[2]), mkSubject('閱讀課',[3]), mkSubject('綜合',[4]), mkSubject('表達力',[5]) ];
@@ -454,11 +473,17 @@
             const host = $('adminArea');
 
             function subjRowHtml(s, idx, total){
+                const wdBtn = w=>{
+                    const isClass = s.weekdays.includes(w), isHw = !isClass && (s.hwOnly||[]).includes(w);
+                    const cls = isClass ? 'on' : (isHw ? 'hw' : '');
+                    const title = isClass ? '上課＋作業（點一下→只交作業）' : isHw ? '只交作業（點一下→無）' : '無（點一下→上課＋作業）';
+                    return `<button type="button" data-role="wd" data-wd="${w}" class="${cls}" title="${title}">${WD[w]}</button>`;
+                };
                 return `<div class="subj-row" data-sid="${s.id}">
                     <div class="swatch" data-role="swatch" style="background:${s.color};" title="換顏色"></div>
                     <input type="text" data-role="name" value="${esc(s.name)}" placeholder="科目名稱">
                     <div class="row" style="gap:6px;">
-                        <div class="wd-toggles">${[1,2,3,4,5].map(w=>`<button type="button" data-role="wd" data-wd="${w}" class="${s.weekdays.includes(w)?'on':''}">${WD[w]}</button>`).join('')}</div>
+                        <div class="wd-toggles">${[1,2,3,4,5].map(wdBtn).join('')}</div>
                         <button type="button" class="icon-btn" data-role="up" title="上移" ${idx===0?'disabled':''}>▲</button>
                         <button type="button" class="icon-btn" data-role="down" title="下移" ${idx===total-1?'disabled':''}>▼</button>
                         <button type="button" class="icon-btn" data-role="del-subj" title="刪除科目">✕</button>
@@ -473,8 +498,20 @@
                 editor.querySelectorAll('.subj-row').forEach(row=>{
                     const sid = row.dataset.sid, s = subjects.find(x=>x.id===sid);
                     row.querySelector('[data-role=name]').oninput = e=> s.name = e.target.value;
+                    if(!s.hwOnly) s.hwOnly = [];
                     row.querySelectorAll('[data-role=wd]').forEach(btn=>{
-                        btn.onclick = ()=>{ const w=Number(btn.dataset.wd); const i=s.weekdays.indexOf(w); if(i>-1) s.weekdays.splice(i,1); else s.weekdays.push(w); btn.classList.toggle('on'); };
+                        btn.onclick = ()=>{
+                            const w = Number(btn.dataset.wd);
+                            const isClass = s.weekdays.includes(w), isHw = !isClass && s.hwOnly.includes(w);
+                            const cur = isClass ? 'class' : (isHw ? 'hw' : 'off');
+                            const nxt = cur==='off' ? 'class' : cur==='class' ? 'hw' : 'off';
+                            s.weekdays = s.weekdays.filter(x=>x!==w);
+                            s.hwOnly = s.hwOnly.filter(x=>x!==w);
+                            if(nxt==='class') s.weekdays.push(w);
+                            if(nxt==='hw') s.hwOnly.push(w);
+                            btn.className = nxt==='class' ? 'on' : nxt==='hw' ? 'hw' : '';
+                            btn.title = nxt==='class' ? '上課＋作業（點一下→只交作業）' : nxt==='hw' ? '只交作業（點一下→無）' : '無（點一下→上課＋作業）';
+                        };
                     });
                     row.querySelector('[data-role=swatch]').onclick = ()=>{ const i=PALETTE.indexOf(s.color); s.color=PALETTE[(i+1)%PALETTE.length]; row.querySelector('[data-role=swatch]').style.background=s.color; };
                     const idx = subjects.findIndex(x=>x.id===sid);
@@ -494,6 +531,7 @@
                 </div>
                 <div>
                     <label style="font-size:14px; color:var(--muted); font-weight:600;">科目與上課星期</label>
+                    <p class="hint" style="display:flex; align-items:center; flex-wrap:wrap; gap:5px; margin:4px 0 8px;">點星期按鈕切換：白＝無<span style="display:inline-flex; align-items:center; width:10px; height:10px; border-radius:3px; background:var(--text); margin-left:4px;"></span>深色＝上課＋作業<span style="display:inline-flex; align-items:center; width:10px; height:10px; border-radius:3px; background:var(--accent); margin-left:4px;"></span>紫色＝只交作業</p>
                     <div id="subj-editor">${cfg.subjects.map((s,i)=>subjRowHtml(s, i, cfg.subjects.length)).join('')}</div>
                     <button class="btn outline small" id="add-subj" type="button" style="margin-top:8px;">＋ 新增科目</button>
                 </div>`;
@@ -550,15 +588,19 @@
             }
             function progressHtml(){
                 const subj = local.config.subjects.find(s=>s.id===ui.subjectId) || local.config.subjects[0];
-                const dates = schoolDates(local.config).filter(ds=>subj.weekdays.includes(wdOf(ds)));
+                const allSchoolDates = schoolDates(local.config);
+                const normalDates = allSchoolDates.filter(ds=>subj.weekdays.includes(wdOf(ds)));
+                const hwOnlyDates = allSchoolDates.filter(ds=>(subj.hwOnly||[]).includes(wdOf(ds)) && !subj.weekdays.includes(wdOf(ds)));
+                const dates = [...normalDates, ...hwOnlyDates].sort();
                 let lastMonth=null, rows='';
                 dates.forEach(ds=>{
                     const d = parseD(ds), mLabel = d.getFullYear()+'年 '+(d.getMonth()+1)+'月';
                     if(mLabel!==lastMonth){ rows += `<div class="month-head">${mLabel}</div>`; lastMonth=mLabel; }
                     const e = getEntry(local, ds, subj.id), isHoliday = !!(local.holidays[ds]), isExam = !!(local.exams[ds]);
+                    const isHwOnly = !subj.weekdays.includes(wdOf(ds));
                     rows += `<div class="entry-row ${isHoliday?'holiday':(isExam?'exam':'')}">
-                        <div class="date-lbl">${shortD(ds)}<span class="wd">(${WD[wdOf(ds)]})</span>${isHoliday?`<span class="stamp">${esc(local.holidays[ds])}</span>`:''}${isExam?`<span class="stamp exam">${esc(local.exams[ds])}</span>`:''}</div>
-                        <textarea data-field="progress" data-sid="${subj.id}" data-date="${ds}" placeholder="今天的進度…">${esc(e.progress)}</textarea>
+                        <div class="date-lbl">${shortD(ds)}<span class="wd">(${WD[wdOf(ds)]})</span>${isHoliday?`<span class="stamp">${esc(formatHolidayLabel(local.holidays[ds]))}</span>`:''}${isExam?`<span class="stamp exam">${esc(formatExamLabel(local.exams[ds]))}</span>`:''}${isHwOnly?`<span class="tag-hwonly">只作業</span>`:''}</div>
+                        ${isHwOnly?'<div></div>':`<textarea data-field="progress" data-sid="${subj.id}" data-date="${ds}" placeholder="今天的進度…">${esc(e.progress)}</textarea>`}
                         <textarea data-field="homework" data-sid="${subj.id}" data-date="${ds}" placeholder="今天的作業…">${esc(e.homework)}</textarea>
                     </div>`;
                 });
@@ -567,7 +609,8 @@
                     <span class="saved-flag">已同步</span>
                 </div>
                 <div class="card section">
-                    <h2 style="font-size:18.5px;">${esc(subj.name)}　<span class="hint" style="font-weight:400;">上課日：${subj.weekdays.map(w=>WD[w]).join('、')}</span></h2>
+                    <h2 style="font-size:18.5px;">${esc(subj.name)}　<span class="hint" style="font-weight:400;">上課日：${subj.weekdays.map(w=>WD[w]).join('、')||'無'}${(subj.hwOnly&&subj.hwOnly.length)?'　只交作業：'+subj.hwOnly.map(w=>WD[w]).join('、'):''}</span></h2>
+                    <p class="hint">要調整「只交作業」的星期，請到「學期設定」→ 該科目的星期按鈕點兩下（切換成紫色）。</p>
                     ${dates.length ? rows : '<p class="hint">此科目在學期範圍內沒有排定的上課日。</p>'}
                 </div>`;
             }
@@ -585,7 +628,7 @@
                         return `<div class="subj-card" style="--c:${s.color};"><div class="sname">${esc(s.name)}</div>
                             <textarea data-field="progress" data-sid="${s.id}" data-date="${ds}" placeholder="（尚未填寫）">${esc(e.progress)}</textarea></div>`;
                     }).join('') : '<div class="day-empty">這天沒有排課</div>';
-                    return `<div class="day-col"><div class="day-head"><span class="d">${shortD(ds)}</span><span class="w">週${WD[wdOf(ds)]}${isHoliday?` · <span style="color:var(--holiday); font-weight:700;">${esc(local.holidays[ds])}</span>`:''}${isExam?` · <span style="color:var(--exam); font-weight:700;">${esc(local.exams[ds])}</span>`:''}</span></div><div class="day-body">${body}</div></div>`;
+                    return `<div class="day-col"><div class="day-head"><span class="d">${shortD(ds)}</span><span class="w">週${WD[wdOf(ds)]}${isHoliday?` · <span style="color:var(--holiday); font-weight:700;">${esc(formatHolidayLabel(local.holidays[ds]))}</span>`:''}${isExam?` · <span style="color:var(--exam); font-weight:700;">${esc(formatExamLabel(local.exams[ds]))}</span>`:''}</span></div><div class="day-body">${body}</div></div>`;
                 }).join('');
                 return `<div class="week-nav">
                     <button class="icon-btn" id="wk-prev" ${ui.weekIdx<=0?'disabled':''}>← 上一週</button>
@@ -596,14 +639,15 @@
                 <p class="hint" style="margin-top:12px;">這裡的進度欄位與「課程進度」是同一份資料，互相同步。</p>`;
             }
             function homeworkHtml(){
-                const dates = schoolDates(local.config);
+                const todayStr = fmt(new Date());
+                const dates = schoolDates(local.config).filter(ds=>ds >= todayStr);
                 const blocks = dates.map(ds=>{
-                    const subs = subjectsOnDate(local.config, ds).map(s=>({s,e:getEntry(local,ds,s.id)})).filter(x=>x.e.homework && x.e.homework.trim());
+                    const subs = subjectsForHomework(local.config, ds).map(s=>({s,e:getEntry(local,ds,s.id)})).filter(x=>x.e.homework && x.e.homework.trim());
                     if(ui.hwOnlyFilled && !subs.length) return '';
                     const isHoliday = !!(local.holidays[ds]), isExam = !!(local.exams[ds]); const d = parseD(ds);
                     return `<div class="card hw-day" data-date="${ds}">
                         <div class="hw-day-head">
-                            <div class="d">${(d.getMonth()+1)}/${d.getDate()}（${WD[wdOf(ds)]}）${isHoliday?` <span class="stamp">${esc(local.holidays[ds])}</span>`:''}${isExam?` <span class="stamp exam">${esc(local.exams[ds])}</span>`:''}</div>
+                            <div class="d">${(d.getMonth()+1)}/${d.getDate()}（${WD[wdOf(ds)]}）${isHoliday?` <span class="stamp">${esc(formatHolidayLabel(local.holidays[ds]))}</span>`:''}${isExam?` <span class="stamp exam">${esc(formatExamLabel(local.exams[ds]))}</span>`:''}</div>
                             <button class="btn small outline" data-copy="${ds}" ${subs.length?'':'disabled'}>複製今日作業</button>
                         </div>
                         ${subs.length ? `<ul class="hw-list">${subs.map(x=>`<li><b>${esc(x.s.name)}：</b>${esc(x.e.homework)}</li>`).join('')}</ul>` : '<p class="hint">（無作業）</p>'}
@@ -671,7 +715,7 @@
                 document.querySelectorAll('[data-copy]').forEach(btn=>{
                     btn.onclick = async ()=>{
                         const ds = btn.dataset.copy;
-                        const subs = subjectsOnDate(local.config, ds).map(s=>({s,e:getEntry(local,ds,s.id)})).filter(x=>x.e.homework && x.e.homework.trim());
+                        const subs = subjectsForHomework(local.config, ds).map(s=>({s,e:getEntry(local,ds,s.id)})).filter(x=>x.e.homework && x.e.homework.trim());
                         const d = parseD(ds);
                         let text = (d.getMonth()+1)+'/'+d.getDate()+'（'+WD[wdOf(ds)]+'）作業\n' + subs.map(x=>x.s.name+'：'+x.e.homework).join('\n');
                         try{ await navigator.clipboard.writeText(text); }
