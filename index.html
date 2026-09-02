@@ -78,8 +78,9 @@
         header { position:relative; display:flex; align-items:center; justify-content:center; padding:20px; border-bottom:1px solid var(--line); }
         header h1 { font-size:34.5px; margin:0; text-align:center; }
         .header-btn { position:absolute; right:20px; top:50%; transform:translateY(-50%); }
-        #wrap { max-width:980px; margin:0 auto; padding:0 20px 60px; }
+        #wrap { width:92%; max-width:1400px; margin:0 auto; padding:0 24px 60px; }
         .card { background:var(--surface); border:1px solid var(--line); border-radius:14px; box-shadow:0 1px 0 rgba(0,0,0,.04); }
+        .form-card { max-width:760px; }
         .section { padding:18px 20px; margin:16px 0; }
         .hint { font-size:14.5px; color:var(--muted); line-height:1.7; }
         .row { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
@@ -110,9 +111,12 @@
         .chip .dot { width:8px; height:8px; border-radius:50%; }
         .chip.active { border-color:currentColor; background:#fff; }
 
-        .subj-row { display:grid; grid-template-columns:22px 1fr auto; gap:10px; align-items:center; padding:8px 0; border-bottom:1px dashed var(--line); }
+        .subj-row { display:grid; grid-template-columns:22px 200px auto; gap:10px; align-items:center; padding:8px 0; border-bottom:1px dashed var(--line); }
         .subj-row:last-child { border-bottom:none; }
         .wd-toggles { display:flex; gap:4px; }
+        .wd-legend { display:flex; align-items:center; flex-wrap:wrap; gap:5px; margin:4px 0 8px; }
+        .wd-legend-items { display:inline-flex; align-items:center; flex-wrap:wrap; gap:5px; }
+        .date-name-row { display:flex; gap:6px; align-items:center; }
         .wd-toggles button { width:28px; height:28px; border-radius:6px; border:1px solid var(--line); background:#fff; font-size:14.5px; cursor:pointer; color:var(--muted); font-weight:700; }
         .wd-toggles button.on { background:var(--text); color:#fff; border-color:var(--text); }
         .wd-toggles button.hw { background:var(--accent); color:#fff; border-color:var(--accent); }
@@ -140,15 +144,27 @@
             header { padding:16px 56px; }
             header h1 { font-size:24px; }
             .header-btn { right:10px; padding:6px 14px; font-size:13px; }
-            #wrap { padding:0 12px 40px; }
+            #wrap { width:100%; padding:0 12px 40px; }
             .section { padding:14px 14px; margin:12px 0; }
             input[type=text], input[type=date], textarea, select { font-size:16px; } /* 避免 iOS 對焦自動縮放 */
             .entry-row { grid-template-columns:1fr; gap:6px; }
             .date-lbl { flex-direction:row; align-items:center; gap:8px; padding-top:0; }
-            .subj-row { grid-template-columns:1fr; row-gap:8px; }
             .subj-row .row { justify-content:space-between; }
-            .week-nav { flex-direction:column; align-items:stretch; gap:8px; text-align:center; }
+            .config-top-row .field-term { flex:1 1 100%; }
+            .config-top-row .field-date { flex:1 1 45%; }
+            .wd-legend-label { display:block; width:100%; margin-bottom:2px; }
+            .subj-row { display:flex; flex-wrap:wrap; align-items:center; gap:6px; }
+            .subj-row input[data-role=name] { flex:1 1 90px; min-width:70px; width:auto; }
+            .subj-row .swatch { flex:0 0 auto; }
+            .subj-row > .row { flex:1 1 auto; justify-content:flex-end; gap:4px; }
+            .date-name-row { display:flex; gap:6px; flex:1 1 220px; min-width:0; }
+            .date-name-row input[type=date] { flex:0 0 auto; }
+            .date-name-row input[type=text] { flex:1; min-width:0; }
+            .week-nav { flex-direction:row; align-items:center; justify-content:space-between; gap:6px; text-align:center; }
+            .week-nav .icon-btn { padding:4px 8px; font-size:12px; white-space:nowrap; flex:0 0 auto; }
+            .week-nav .week-range { font-size:14px; flex:1 1 auto; }
             .hw-day-head { flex-direction:column; align-items:flex-start; }
+            .day-head { justify-content:center; gap:6px; text-align:center; }
             nav.tabs button { padding:8px 10px 10px; font-size:15px; }
         }
         .day-col { background:var(--surface); border:2px solid var(--line); border-radius:10px; overflow:hidden; }
@@ -524,14 +540,14 @@
                 });
             }
             function configFormHtml(cfg){
-                return `<div class="row" style="margin-bottom:14px;">
-                    <div class="field"><label>學期名稱</label><input type="text" id="f-term" placeholder="例：114學年度第2學期" value="${esc(cfg.termName||'')}"></div>
-                    <div class="field"><label>開學日</label><input type="date" id="f-start" value="${cfg.start||''}"></div>
-                    <div class="field"><label>結業日</label><input type="date" id="f-end" value="${cfg.end||''}"></div>
+                return `<div class="row config-top-row" style="margin-bottom:14px;">
+                    <div class="field field-term"><label>學期名稱</label><input type="text" id="f-term" placeholder="例：114學年度第2學期" value="${esc(cfg.termName||'')}"></div>
+                    <div class="field field-date"><label>開學日</label><input type="date" id="f-start" value="${cfg.start||''}"></div>
+                    <div class="field field-date"><label>結業日</label><input type="date" id="f-end" value="${cfg.end||''}"></div>
                 </div>
                 <div>
                     <label style="font-size:14px; color:var(--muted); font-weight:600;">科目與上課星期</label>
-                    <p class="hint" style="display:flex; align-items:center; flex-wrap:wrap; gap:5px; margin:4px 0 8px;">點星期按鈕切換：白＝無<span style="display:inline-flex; align-items:center; width:10px; height:10px; border-radius:3px; background:var(--text); margin-left:4px;"></span>深色＝上課＋作業<span style="display:inline-flex; align-items:center; width:10px; height:10px; border-radius:3px; background:var(--accent); margin-left:4px;"></span>紫色＝只交作業</p>
+                    <p class="hint wd-legend"><span class="wd-legend-label">點星期按鈕切換：</span><span class="wd-legend-items">白＝無<span style="display:inline-flex; align-items:center; width:10px; height:10px; border-radius:3px; background:var(--text); margin-left:4px;"></span>深色＝上課＋作業<span style="display:inline-flex; align-items:center; width:10px; height:10px; border-radius:3px; background:var(--accent); margin-left:4px;"></span>紫色＝只交作業</span></p>
                     <div id="subj-editor">${cfg.subjects.map((s,i)=>subjRowHtml(s, i, cfg.subjects.length)).join('')}</div>
                     <button class="btn outline small" id="add-subj" type="button" style="margin-top:8px;">＋ 新增科目</button>
                 </div>`;
@@ -553,7 +569,7 @@
                 bindApp();
             }
             function onboardingHtml(){
-                return `<div id="wrap"><div class="card section">
+                return `<div id="wrap"><div class="card section form-card">
                     <h2 style="margin-bottom:6px;">先設定這學期</h2>
                     <p class="hint">進度、週總表、作業摘要共用同一份資料——填一次「課程進度」，其餘畫面自動整理，換學期只要重設這裡即可。</p>
                     ${configFormHtml({termName:'', start:'', end:'', subjects: defaultSubjects()})}
@@ -616,7 +632,7 @@
             }
             function weekHtml(){
                 const weeks = weeksOf(schoolDates(local.config));
-                if(!weeks.length) return '<div class="empty">尚無日期</div>';
+                if(!weeks.length) return '<div class="card section"><div class="empty">尚無日期</div></div>';
                 if(ui.weekIdx>=weeks.length) ui.weekIdx=weeks.length-1;
                 if(ui.weekIdx<0) ui.weekIdx=0;
                 const week = weeks[ui.weekIdx];
@@ -630,13 +646,15 @@
                     }).join('') : '<div class="day-empty">這天沒有排課</div>';
                     return `<div class="day-col"><div class="day-head"><span class="d">${shortD(ds)}</span><span class="w">週${WD[wdOf(ds)]}${isHoliday?` · <span style="color:var(--holiday); font-weight:700;">${esc(formatHolidayLabel(local.holidays[ds]))}</span>`:''}${isExam?` · <span style="color:var(--exam); font-weight:700;">${esc(formatExamLabel(local.exams[ds]))}</span>`:''}</span></div><div class="day-body">${body}</div></div>`;
                 }).join('');
-                return `<div class="week-nav">
-                    <button class="icon-btn" id="wk-prev" ${ui.weekIdx<=0?'disabled':''}>← 上一週</button>
-                    <div class="week-range">第${ui.weekIdx+1}週　${shortD(week[0])} – ${shortD(week[week.length-1])}<span class="saved-flag">已同步</span></div>
-                    <button class="icon-btn" id="wk-next" ${ui.weekIdx>=weeks.length-1?'disabled':''}>下一週 →</button>
-                </div>
-                <div class="week-grid">${cols}</div>
-                <p class="hint" style="margin-top:12px;">這裡的進度欄位與「課程進度」是同一份資料，互相同步。</p>`;
+                return `<div class="card section">
+                    <div class="week-nav">
+                        <button class="icon-btn" id="wk-prev" ${ui.weekIdx<=0?'disabled':''}>← 上一週</button>
+                        <div class="week-range">第${ui.weekIdx+1}週　${shortD(week[0])} – ${shortD(week[week.length-1])}<span class="saved-flag">已同步</span></div>
+                        <button class="icon-btn" id="wk-next" ${ui.weekIdx>=weeks.length-1?'disabled':''}>下一週 →</button>
+                    </div>
+                    <div class="week-grid">${cols}</div>
+                    <p class="hint" style="margin-top:12px;">這裡的進度欄位與「課程進度」是同一份資料，互相同步。</p>
+                </div>`;
             }
             function homeworkHtml(){
                 const todayStr = fmt(new Date());
@@ -663,24 +681,24 @@
                 const examRows = Object.keys(local.exams).sort().map(ds=>`
                     <div class="holiday-item"><span>${shortD(ds)}（${WD[wdOf(ds)]}）</span><span class="lbl" style="color:var(--exam); font-weight:700;">${esc(local.exams[ds])}</span><button class="icon-btn" data-del-exam="${ds}">✕</button></div>
                 `).join('') || '<p class="hint">尚未標記任何考試日。</p>';
-                return `<div class="card section">
+                return `<div class="card section form-card">
                     <h2 style="font-size:18.5px; margin-bottom:10px;">學期與科目</h2>
                     ${configFormHtml(local.config)}
                     <div class="row" style="margin-top:14px;"><button class="btn" id="save-config">儲存設定</button><span class="hint">調整日期或科目不會刪除已填的進度／作業資料。</span></div>
                 </div>
-                <div class="card section">
+                <div class="card section form-card">
                     <h2 style="font-size:18.5px; margin-bottom:6px;">標記假日</h2>
                     <p class="hint">選一個日期並輸入假日名稱，系統會把當天所有排課科目的進度自動填上這個名稱，作業欄留空，之後仍可個別修改。</p>
-                    <div class="row" style="margin-top:10px;"><input type="date" id="hol-date"><input type="text" id="hol-label" placeholder="例：教師節補假"><button class="btn small" id="hol-apply">套用</button></div>
+                    <div class="row" style="margin-top:10px;"><div class="date-name-row"><input type="date" id="hol-date"><input type="text" id="hol-label" placeholder="例：教師節補假"></div><button class="btn small" id="hol-apply">套用</button></div>
                     <div class="holiday-list">${holidayRows}</div>
                 </div>
-                <div class="card section">
+                <div class="card section form-card">
                     <h2 style="font-size:18.5px; margin-bottom:6px;">標記考試日</h2>
                     <p class="hint">選一個日期並輸入考試名稱（例如「期中考」），只會在課程進度／週進度／作業安排上顯示藍色標記，不會更動任何進度或作業內容。</p>
-                    <div class="row" style="margin-top:10px;"><input type="date" id="exam-date"><input type="text" id="exam-label" placeholder="例：期中考"><button class="btn small" id="exam-apply">套用</button></div>
+                    <div class="row" style="margin-top:10px;"><div class="date-name-row"><input type="date" id="exam-date"><input type="text" id="exam-label" placeholder="例：期中考"></div><button class="btn small" id="exam-apply">套用</button></div>
                     <div class="holiday-list">${examRows}</div>
                 </div>
-                <div class="card section">
+                <div class="card section form-card">
                     <h2 style="font-size:18.5px; margin-bottom:10px;">備份與重設</h2>
                     <div class="row">
                         <button class="btn outline small" id="export-btn">匯出備份 (JSON)</button>
