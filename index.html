@@ -28,6 +28,8 @@
             --danger: #a85b6b;      /* 刪除/警示 */
             --holiday: #c0392b;     /* 假日標記色：固定紅色，不隨主色變動 */
             --exam: #2f7fd1;        /* 考試標記色：固定藍色 */
+            --fs-h2: 18.5px;        /* 卡片標題字級（電腦版會再放大，見下方 media query） */
+            --fs-body: 15px;        /* 內文字級 */
         }
         * { box-sizing: border-box; }
         body {
@@ -78,9 +80,9 @@
         header { position:relative; display:flex; align-items:center; justify-content:center; padding:20px; border-bottom:1px solid var(--line); }
         header h1 { font-size:34.5px; margin:0; text-align:center; }
         .header-btn { position:absolute; right:20px; top:50%; transform:translateY(-50%); }
-        #wrap { width:92%; max-width:1400px; margin:0 auto; padding:0 24px 60px; }
+        #wrap { width:85%; max-width:1100px; margin:0 auto; padding:0 24px 60px; }
         .card { background:var(--surface); border:1px solid var(--line); border-radius:14px; box-shadow:0 1px 0 rgba(0,0,0,.04); }
-        .form-card { max-width:760px; }
+        .form-card { max-width:760px; margin-left:auto; margin-right:auto; }
         .section { padding:18px 20px; margin:16px 0; }
         .hint { font-size:14.5px; color:var(--muted); line-height:1.7; }
         .row { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
@@ -165,7 +167,37 @@
             .week-nav .week-range { font-size:14px; flex:1 1 auto; }
             .hw-day-head { flex-direction:column; align-items:flex-start; }
             .day-head { justify-content:center; gap:6px; text-align:center; }
+            .day-head .d { font-size:18px; }
+            .day-head .w { font-size:14.5px; }
+            .week-nav .icon-btn { font-size:14px; padding:5px 10px; }
+            .week-nav .week-range { font-size:17px; }
             nav.tabs button { padding:8px 10px 10px; font-size:15px; }
+        }
+        /* ---- 電腦版：字級再放大一些 ---- */
+        @media (min-width:641px) {
+            :root { --fs-h2:20px; --fs-body:16.5px; }
+            .hint { font-size:15.5px; }
+            .field label { font-size:15px; }
+            .btn.small { font-size:15.5px; }
+            button.icon-btn { font-size:16px; }
+            nav.tabs button { font-size:17.5px; }
+            .chip { font-size:16.5px; }
+            .wd-toggles button { font-size:15.5px; }
+            .month-head { font-size:18px; }
+            .date-lbl { font-size:16px; }
+            .date-lbl .wd { font-size:14px; }
+            .week-range { font-size:20px; }
+            .day-head .d { font-size:17px; }
+            .day-head .w { font-size:13.5px; }
+            .subj-card .sname { font-size:14px; }
+            .subj-card textarea { font-size:16px; }
+            .day-empty { font-size:15px; }
+            .hw-day-head .d { font-size:19.5px; }
+            .hw-list li { font-size:16.5px; }
+            .toggle-row { font-size:16px; }
+            .holiday-item { font-size:16px; }
+            .public-digest h2 { font-size:21px; }
+            .public-digest li { font-size:16.5px; }
         }
         .day-col { background:var(--surface); border:2px solid var(--line); border-radius:10px; overflow:hidden; }
         .day-head { padding:9px 10px; border-bottom:2px solid var(--line); background:color-mix(in srgb, var(--accent) 12%, var(--surface)); display:flex; justify-content:space-between; align-items:center; }
@@ -437,7 +469,7 @@
                 const body = subs.length ? subs.map(s=>{
                     const e = getEntry(data, ds, s.id);
                     return `<div class="subj-card" style="--c:${s.color};"><div class="sname">${esc(s.name)}</div>
-                        <p style="margin:2px 0 0; font-size:15px;">${e.progress ? esc(e.progress) : '<span class="hint">（尚未填寫）</span>'}</p></div>`;
+                        <p style="margin:2px 0 0; font-size:var(--fs-body);">${e.progress ? esc(e.progress) : '<span class="hint">（尚未填寫）</span>'}</p></div>`;
                 }).join('') : '<div class="day-empty">這天沒有排課</div>';
                 return `<div class="day-col" style="${isToday?'outline:2px solid var(--accent);':''}">
                     <div class="day-head"><span class="d">${shortD(ds)}</span><span class="w">週${WD[wdOf(ds)]}${holiday?` · <span style="color:var(--holiday); font-weight:700;">${esc(formatHolidayLabel(holiday))}</span>`:''}${exam?` · <span style="color:var(--exam); font-weight:700;">${esc(formatExamLabel(exam))}</span>`:''}</span></div>
@@ -625,7 +657,7 @@
                     <span class="saved-flag">已同步</span>
                 </div>
                 <div class="card section">
-                    <h2 style="font-size:18.5px;">${esc(subj.name)}　<span class="hint" style="font-weight:400;">上課日：${subj.weekdays.map(w=>WD[w]).join('、')||'無'}${(subj.hwOnly&&subj.hwOnly.length)?'　只交作業：'+subj.hwOnly.map(w=>WD[w]).join('、'):''}</span></h2>
+                    <h2 style="font-size:var(--fs-h2);">${esc(subj.name)}　<span class="hint" style="font-weight:400;">上課日：${subj.weekdays.map(w=>WD[w]).join('、')||'無'}${(subj.hwOnly&&subj.hwOnly.length)?'　只交作業：'+subj.hwOnly.map(w=>WD[w]).join('、'):''}</span></h2>
                     <p class="hint">要調整「只交作業」的星期，請到「學期設定」→ 該科目的星期按鈕點兩下（切換成紫色）。</p>
                     ${dates.length ? rows : '<p class="hint">此科目在學期範圍內沒有排定的上課日。</p>'}
                 </div>`;
@@ -682,24 +714,24 @@
                     <div class="holiday-item"><span>${shortD(ds)}（${WD[wdOf(ds)]}）</span><span class="lbl" style="color:var(--exam); font-weight:700;">${esc(local.exams[ds])}</span><button class="icon-btn" data-del-exam="${ds}">✕</button></div>
                 `).join('') || '<p class="hint">尚未標記任何考試日。</p>';
                 return `<div class="card section form-card">
-                    <h2 style="font-size:18.5px; margin-bottom:10px;">學期與科目</h2>
+                    <h2 style="font-size:var(--fs-h2); margin-bottom:10px;">學期與科目</h2>
                     ${configFormHtml(local.config)}
                     <div class="row" style="margin-top:14px;"><button class="btn" id="save-config">儲存設定</button><span class="hint">調整日期或科目不會刪除已填的進度／作業資料。</span></div>
                 </div>
                 <div class="card section form-card">
-                    <h2 style="font-size:18.5px; margin-bottom:6px;">標記假日</h2>
+                    <h2 style="font-size:var(--fs-h2); margin-bottom:6px;">標記假日</h2>
                     <p class="hint">選一個日期並輸入假日名稱，系統會把當天所有排課科目的進度自動填上這個名稱，作業欄留空，之後仍可個別修改。</p>
                     <div class="row" style="margin-top:10px;"><div class="date-name-row"><input type="date" id="hol-date"><input type="text" id="hol-label" placeholder="例：教師節補假"></div><button class="btn small" id="hol-apply">套用</button></div>
                     <div class="holiday-list">${holidayRows}</div>
                 </div>
                 <div class="card section form-card">
-                    <h2 style="font-size:18.5px; margin-bottom:6px;">標記考試日</h2>
+                    <h2 style="font-size:var(--fs-h2); margin-bottom:6px;">標記考試日</h2>
                     <p class="hint">選一個日期並輸入考試名稱（例如「期中考」），只會在課程進度／週進度／作業安排上顯示藍色標記，不會更動任何進度或作業內容。</p>
                     <div class="row" style="margin-top:10px;"><div class="date-name-row"><input type="date" id="exam-date"><input type="text" id="exam-label" placeholder="例：期中考"></div><button class="btn small" id="exam-apply">套用</button></div>
                     <div class="holiday-list">${examRows}</div>
                 </div>
                 <div class="card section form-card">
-                    <h2 style="font-size:18.5px; margin-bottom:10px;">備份與重設</h2>
+                    <h2 style="font-size:var(--fs-h2); margin-bottom:10px;">備份與重設</h2>
                     <div class="row">
                         <button class="btn outline small" id="export-btn">匯出備份 (JSON)</button>
                         <label class="btn outline small" style="cursor:pointer;">匯入備份 (JSON)<input type="file" id="import-file" accept="application/json" style="display:none;"></label>
