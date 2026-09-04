@@ -32,6 +32,7 @@
             --fs-body: 15px;        /* 內文字級 */
         }
         * { box-sizing: border-box; }
+        button, input, select, textarea { font-family: inherit; }
         body {
             font-family: 'Iansui', system-ui, sans-serif;
             margin: 0; min-height: 100vh;
@@ -113,7 +114,8 @@
         .chip .dot { width:8px; height:8px; border-radius:50%; }
         .chip.active { border-color:currentColor; background:#fff; }
 
-        .subj-row { display:grid; grid-template-columns:22px 200px auto; gap:10px; align-items:center; padding:8px 0; border-bottom:1px dashed var(--line); }
+        .subj-row { display:grid; grid-template-columns:22px 200px 1fr; gap:10px; align-items:center; padding:8px 0; border-bottom:1px dashed var(--line); }
+        .subj-row > .row { justify-content:flex-end; }
         .subj-row:last-child { border-bottom:none; }
         .wd-toggles { display:flex; gap:4px; }
         .wd-legend { display:flex; align-items:center; flex-wrap:wrap; gap:5px; margin:4px 0 8px; }
@@ -165,10 +167,10 @@
             .hw-day-head { flex-direction:column; align-items:flex-start; }
             .day-head { justify-content:center; gap:6px; text-align:center; }
             .day-head .d { font-size:18px; }
-            .day-head .w { font-size:14.5px; }
+            .day-head .w { font-size:18px; }
             .week-nav { flex-direction:row; flex-wrap:nowrap; align-items:center; justify-content:space-between; gap:4px; text-align:center; }
             .week-nav .icon-btn { font-size:14px; padding:5px 10px; flex:0 0 auto; white-space:nowrap; }
-            .week-nav .week-range { font-size:14px; flex:1 1 auto; min-width:0; }
+            .week-nav .week-range { font-size:14px; flex:1 1 auto; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
             nav.tabs button { padding:8px 10px 10px; font-size:15px; }
         }
         /* ---- 電腦版：字級再放大一些 ---- */
@@ -186,7 +188,7 @@
             .date-lbl .wd { font-size:14px; }
             .week-range { font-size:20px; }
             .day-head .d { font-size:17px; }
-            .day-head .w { font-size:13.5px; }
+            .day-head .w { font-size:17px; }
             .subj-card .sname { font-size:14px; }
             .subj-card textarea { font-size:16px; }
             .day-empty { font-size:15px; }
@@ -198,9 +200,9 @@
             .public-digest li { font-size:16.5px; }
         }
         .day-col { background:var(--surface); border:2px solid var(--line); border-radius:10px; overflow:hidden; }
-        .day-head { padding:9px 10px; border-bottom:2px solid var(--line); background:color-mix(in srgb, var(--accent) 12%, var(--surface)); display:flex; justify-content:space-between; align-items:center; }
+        .day-head { padding:9px 10px; border-bottom:2px solid var(--line); background:color-mix(in srgb, var(--accent) 12%, var(--surface)); display:flex; justify-content:flex-start; align-items:center; gap:6px; flex-wrap:wrap; }
         .day-head .d { font-weight:700; font-size:15.5px; }
-        .day-head .w { font-size:12.5px; color:var(--muted); }
+        .day-head .w { font-size:15.5px; color:var(--muted); }
         .day-body { padding:8px; display:flex; flex-direction:column; gap:8px; min-height:50px; }
         .subj-card { border-radius:8px; padding:7px 8px; border-left:4px solid var(--c); background:color-mix(in srgb, var(--c) 8%, white); }
         .subj-card .sname { font-size:13px; font-weight:700; color:var(--c); }
@@ -470,7 +472,7 @@
                         <p style="margin:2px 0 0; font-size:var(--fs-body);">${e.progress ? esc(e.progress) : '<span class="hint">（尚未填寫）</span>'}</p></div>`;
                 }).join('') : '<div class="day-empty">這天沒有排課</div>';
                 return `<div class="day-col" style="${isToday?'outline:2px solid var(--accent);':''}">
-                    <div class="day-head"><span class="d">${shortD(ds)}</span><span class="w">週${WD[wdOf(ds)]}${holiday?` · <span style="color:var(--holiday); font-weight:700;">${esc(formatHolidayLabel(holiday))}</span>`:''}${exam?` · <span style="color:var(--exam); font-weight:700;">${esc(formatExamLabel(exam))}</span>`:''}</span></div>
+                    <div class="day-head"><span class="d">${shortD(ds)}</span><span class="w">週${WD[wdOf(ds)]}${holiday?` · <span style="color:var(--holiday); font-weight:700;">${esc(holiday)}</span>`:''}${exam?` · <span style="color:var(--exam); font-weight:700;">${esc(exam)}</span>`:''}</span></div>
                     <div class="day-body">${body}</div>
                 </div>`;
             }).join('');
@@ -480,7 +482,7 @@
                 const subs = subjectsForHomework(data.config, ds).map(s=>({s,e:getEntry(data,ds,s.id)})).filter(x=>x.e.homework && x.e.homework.trim());
                 const d = parseD(ds);
                 const holiday = data.holidays && data.holidays[ds];
-                return `<div style="margin:14px 0;"><b>${(d.getMonth()+1)}/${d.getDate()}（${WD[wdOf(ds)]}）${holiday?'　'+esc(formatHolidayLabel(holiday)):''}</b>
+                return `<div style="margin:14px 0;"><b>${(d.getMonth()+1)}/${d.getDate()}（${WD[wdOf(ds)]}）${holiday?'　'+esc(holiday):''}</b>
                     ${subs.length ? '<ul>'+subs.map(x=>`<li>${esc(x.s.name)}：${esc(x.e.homework)}</li>`).join('')+'</ul>' : '<p class="hint" style="margin:4px 0 0;">（尚未填寫作業）</p>'}
                 </div>`;
             }).join('');
@@ -666,15 +668,17 @@
                 if(ui.weekIdx>=weeks.length) ui.weekIdx=weeks.length-1;
                 if(ui.weekIdx<0) ui.weekIdx=0;
                 const week = weeks[ui.weekIdx];
+                const todayStr = fmt(new Date());
                 const cols = week.map(ds=>{
                     const subs = subjectsOnDate(local.config, ds);
                     const isHoliday = !!(local.holidays[ds]), isExam = !!(local.exams[ds]);
+                    const isToday = ds === todayStr;
                     const body = subs.length ? subs.map(s=>{
                         const e = getEntry(local, ds, s.id);
                         return `<div class="subj-card" style="--c:${s.color};"><div class="sname">${esc(s.name)}</div>
                             <textarea data-field="progress" data-sid="${s.id}" data-date="${ds}" placeholder="（尚未填寫）">${esc(e.progress)}</textarea></div>`;
                     }).join('') : '<div class="day-empty">這天沒有排課</div>';
-                    return `<div class="day-col"><div class="day-head"><span class="d">${shortD(ds)}</span><span class="w">週${WD[wdOf(ds)]}${isHoliday?` · <span style="color:var(--holiday); font-weight:700;">${esc(formatHolidayLabel(local.holidays[ds]))}</span>`:''}${isExam?` · <span style="color:var(--exam); font-weight:700;">${esc(formatExamLabel(local.exams[ds]))}</span>`:''}</span></div><div class="day-body">${body}</div></div>`;
+                    return `<div class="day-col" style="${isToday?'outline:2px solid var(--accent);':''}"><div class="day-head"><span class="d">${shortD(ds)}</span><span class="w">週${WD[wdOf(ds)]}${isHoliday?` · <span style="color:var(--holiday); font-weight:700;">${esc(local.holidays[ds])}</span>`:''}${isExam?` · <span style="color:var(--exam); font-weight:700;">${esc(formatExamLabel(local.exams[ds]))}</span>`:''}</span></div><div class="day-body">${body}</div></div>`;
                 }).join('');
                 return `<div class="card section">
                     <div class="week-nav">
