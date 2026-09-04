@@ -139,7 +139,7 @@
         .entry-row textarea { min-height:34px; }
 
         .week-nav { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; gap:10px; flex-wrap:wrap; }
-        .week-range { font-weight:700; font-size:18.5px; }
+        .week-range { display:flex; flex-wrap:wrap; justify-content:center; align-items:baseline; column-gap:6px; font-weight:700; font-size:18.5px; }
         .week-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:10px; }
         @media (max-width:820px) { .week-grid { grid-template-columns:1fr; } }
 
@@ -170,7 +170,8 @@
             .day-head .w { font-size:18px; }
             .week-nav { flex-direction:row; flex-wrap:nowrap; align-items:center; justify-content:space-between; gap:4px; text-align:center; }
             .week-nav .icon-btn { font-size:14px; padding:5px 10px; flex:0 0 auto; white-space:nowrap; }
-            .week-nav .week-range { font-size:14px; flex:1 1 auto; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+            .week-nav .week-range { font-size:14px; flex:1 1 auto; min-width:0; white-space:normal; justify-content:center; text-align:center; }
+            .week-nav .week-range .saved-flag { display:none; }
             nav.tabs button { padding:8px 10px 10px; font-size:15px; }
         }
         /* ---- 電腦版：字級再放大一些 ---- */
@@ -683,7 +684,7 @@
                 return `<div class="card section">
                     <div class="week-nav">
                         <button class="icon-btn" id="wk-prev" ${ui.weekIdx<=0?'disabled':''}>← 上一週</button>
-                        <div class="week-range">第${ui.weekIdx+1}週　${shortD(week[0])} – ${shortD(week[week.length-1])}<span class="saved-flag">已同步</span></div>
+                        <div class="week-range"><span class="wk-num">第${ui.weekIdx+1}週</span><span class="wk-dates">${shortD(week[0])} – ${shortD(week[week.length-1])}</span><span class="saved-flag">已同步</span></div>
                         <button class="icon-btn" id="wk-next" ${ui.weekIdx>=weeks.length-1?'disabled':''}>下一週 →</button>
                     </div>
                     <div class="week-grid">${cols}</div>
