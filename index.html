@@ -80,159 +80,217 @@
         /* =========================================================
            以下為本 app 業務內容專用樣式（只新增，不改上面共用命名）
            ========================================================= */
-        header { position:relative; display:flex; align-items:center; justify-content:center; padding:20px; border-bottom:1px solid var(--line); }
-        header h1 { font-size:34.5px; margin:0; text-align:center; }
-        .header-btn { position:absolute; right:20px; top:50%; transform:translateY(-50%); }
-        #wrap { width:85%; max-width:1100px; margin:0 auto; padding:0 24px 60px; }
-        .card { background:var(--surface); border:1px solid var(--line); border-radius:14px; box-shadow:0 1px 0 rgba(0,0,0,.04); }
+        /* 3. 標題區塊增高 (電腦版 padding: 30px 20px) 與下方主色底線 */
+        header { 
+            position: relative; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            padding: 30px 20px; 
+            border-bottom: 2px solid var(--accent); 
+            margin-bottom: 24px; /* 4. 保持與下方內容的適當間距 */
+        }
+        header h1 { font-size: 34.5px; margin: 0; text-align: center; }
+        
+        /* 1. 登入鈕設定值 */
+        #loginBtn {
+            position: absolute;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: transparent;
+            color: var(--accent);
+            border: 2px solid var(--accent);
+            padding: 9px 22px;
+            border-radius: 50px;
+            font-size: 1.05em;
+            white-space: nowrap;
+            transition: all .2s;
+            cursor: pointer;
+        }
+        #loginBtn:hover {
+            background: var(--accent);
+            color: #fff;
+        }
+        #loginBtn:active {
+            transform: translateY(-50%) scale(0.97);
+        }
+
+        /* 2. 登出鈕設定值 */
+        #logoutBtn {
+            position: absolute;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: transparent;
+            color: #c0392b;
+            border: 2px solid #c0392b;
+            padding: 9px 22px;
+            border-radius: 50px;
+            font-size: 1.05em;
+            white-space: nowrap;
+            transition: all .2s;
+            cursor: pointer;
+        }
+        #logoutBtn:hover {
+            background: #c0392b;
+            color: #fff;
+        }
+        #logoutBtn:active {
+            transform: translateY(-50%) scale(0.97);
+        }
+
+        #wrap { width: 85%; max-width: 1100px; margin: 0 auto; padding: 0 24px 60px; }
+        .card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; box-shadow: 0 1px 0 rgba(0,0,0,.04); }
         .form-card { /* 與其他分頁卡片同寬，不再另外限制 */ }
-        .section { padding:18px 20px; margin:16px 0; }
-        .hint { font-size:14.5px; color:var(--muted); line-height:1.7; }
-        .row { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
-        .field { display:flex; flex-direction:column; gap:4px; }
-        .field label { font-size:14px; color:var(--muted); font-weight:600; }
+        .section { padding: 18px 20px; margin: 16px 0; }
+        .hint { font-size: 14.5px; color: var(--muted); line-height: 1.7; }
+        .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+        .field { display: flex; flex-direction: column; gap: 4px; }
+        .field label { font-size: 14px; color: var(--muted); font-weight: 600; }
         input[type=text], input[type=date], textarea, select {
-            font-family:inherit; font-size:16px; color:var(--text);
-            background:#fff; border:1px solid var(--line); border-radius:8px; padding:7px 9px;
+            font-family: inherit; font-size: 16px; color: var(--text);
+            background: #fff; border: 1px solid var(--line); border-radius: 8px; padding: 7px 9px;
         }
         input[type=text]:focus, input[type=date]:focus, textarea:focus {
-            outline:none; border-color:var(--accent); box-shadow:0 0 10px 2px var(--focus-glow);
+            outline: none; border-color: var(--accent); box-shadow: 0 0 10px 2px var(--focus-glow);
         }
-        textarea { resize:vertical; font-family:inherit; width:100%; }
-        .btn.small { padding:5px 12px; font-size:14.5px; }
-        .btn.danger { background:var(--danger); border-color:var(--danger); }
-        button.icon-btn { background:none; border:1px solid var(--line); border-radius:8px; cursor:pointer; padding:5px 9px; font-size:15px; color:var(--text); }
-        button.icon-btn:hover:not(:disabled) { background:var(--accent); color:#fff; border-color:var(--accent); }
-        button.icon-btn:disabled { opacity:.4; cursor:default; }
-        .empty { text-align:center; padding:40px 20px; color:var(--muted); }
+        textarea { resize: vertical; font-family: inherit; width: 100%; }
+        .btn.small { padding: 5px 12px; font-size: 14.5px; }
+        .btn.danger { background: var(--danger); border-color: var(--danger); }
+        button.icon-btn { background: none; border: 1px solid var(--line); border-radius: 8px; cursor: pointer; padding: 5px 9px; font-size: 15px; color: var(--text); }
+        button.icon-btn:hover:not(:disabled) { background: var(--accent); color: #fff; border-color: var(--accent); }
+        button.icon-btn:disabled { opacity: .4; cursor: default; }
+        .empty { text-align: center; padding: 40px 20px; color: var(--muted); }
 
-        nav.tabs { display:flex; gap:4px; margin:14px 0 6px; border-bottom:2px solid var(--line); flex-wrap:wrap; overflow:visible; }
-        nav.tabs button { font-family:inherit; font-weight:700; font-size:16.5px; background:none; border:none; cursor:pointer; color:var(--muted); padding:9px 14px 11px; position:relative; white-space:nowrap; }
-        nav.tabs button.active { color:var(--text); }
-        nav.tabs button.active::after { content:""; position:absolute; left:8px; right:8px; bottom:-2px; height:3px; background:var(--accent); border-radius:2px 2px 0 0; }
+        nav.tabs { display: flex; gap: 4px; margin: 14px 0 6px; border-bottom: 2px solid var(--line); flex-wrap: wrap; overflow: visible; }
+        nav.tabs button { font-family: inherit; font-weight: 700; font-size: 16.5px; background: none; border: none; cursor: pointer; color: var(--muted); padding: 9px 14px 11px; position: relative; white-space: nowrap; }
+        nav.tabs button.active { color: var(--text); }
+        nav.tabs button.active::after { content: ""; position: absolute; left: 8px; right: 8px; bottom: -2px; height: 3px; background: var(--accent); border-radius: 2px 2px 0 0; }
 
-        .chips { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px; }
-        .chip { display:inline-flex; align-items:center; gap:6px; padding:6px 12px; border-radius:999px; font-size:15.5px; font-weight:700; cursor:pointer; border:2px solid transparent; background:var(--bg); }
-        .chip .dot { width:8px; height:8px; border-radius:50%; }
-        .chip.active { border-color:currentColor; background:#fff; }
+        .chips { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
+        .chip { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 999px; font-size: 15.5px; font-weight: 700; cursor: pointer; border: 2px solid transparent; background: var(--bg); }
+        .chip .dot { width: 8px; height: 8px; border-radius: 50%; }
+        .chip.active { border-color: currentColor; background: #fff; }
 
-        .subj-row { display:grid; grid-template-columns:22px 200px 1fr; gap:10px; align-items:center; padding:8px 0; border-bottom:1px dashed var(--line); }
-        .subj-row > .row { justify-content:flex-end; }
-        .subj-row:last-child { border-bottom:none; }
-        .wd-toggles { display:flex; gap:4px; }
-        .wd-legend { display:flex; align-items:center; flex-wrap:wrap; gap:5px; margin:4px 0 8px; }
-        .wd-legend-items { display:inline-flex; align-items:center; flex-wrap:wrap; gap:5px; }
-        .date-name-row { display:flex; gap:6px; align-items:center; }
-        .wd-toggles button { width:28px; height:28px; border-radius:6px; border:1px solid var(--line); background:#fff; font-size:14.5px; cursor:pointer; color:var(--muted); font-weight:700; }
-        .wd-toggles button.on { background:var(--text); color:#fff; border-color:var(--text); }
-        .wd-toggles button.hw { background:var(--accent); color:#fff; border-color:var(--accent); }
-        .swatch { width:20px; height:20px; border-radius:50%; border:2px solid #fff; box-shadow:0 0 0 1px var(--line); cursor:pointer; }
+        .subj-row { display: grid; grid-template-columns: 22px 200px 1fr; gap: 10px; align-items: center; padding: 8px 0; border-bottom: 1px dashed var(--line); }
+        .subj-row > .row { justify-content: flex-end; }
+        .subj-row:last-child { border-bottom: none; }
+        .wd-toggles { display: flex; gap: 4px; }
+        .wd-legend { display: flex; align-items: center; flex-wrap: wrap; gap: 5px; margin: 4px 0 8px; }
+        .wd-legend-items { display: inline-flex; align-items: center; flex-wrap: wrap; gap: 5px; }
+        .date-name-row { display: flex; gap: 6px; align-items: center; }
+        .wd-toggles button { width: 28px; height: 28px; border-radius: 6px; border: 1px solid var(--line); background: #fff; font-size: 14.5px; cursor: pointer; color: var(--muted); font-weight: 700; }
+        .wd-toggles button.on { background: var(--text); color: #fff; border-color: var(--text); }
+        .wd-toggles button.hw { background: var(--accent); color: #fff; border-color: var(--accent); }
+        .swatch { width: 20px; height: 20px; border-radius: 50%; border: 2px solid #fff; box-shadow: 0 0 0 1px var(--line); cursor: pointer; }
 
-        .month-head { font-weight:700; font-size:17px; margin:16px 0 6px; }
-        .month-head:first-child { margin-top:0; }
-        .entry-row { display:grid; grid-template-columns:78px 1fr 1fr; gap:10px; align-items:start; padding:8px 6px; border-radius:8px; }
-        .entry-row.holiday { background:color-mix(in srgb, var(--holiday) 10%, white); }
-        .entry-row + .entry-row { border-top:1px solid var(--bg); }
-        .date-lbl { font-weight:700; font-size:15px; padding-top:8px; display:flex; flex-direction:column; align-items:flex-start; gap:2px; }
-        .date-lbl .wd { font-weight:500; color:var(--muted); font-size:13px; }
-        .stamp { display:inline-block; align-self:flex-start; font-size:11.5px; font-weight:700; color:var(--holiday); border:1.5px solid var(--holiday); border-radius:5px; padding:1px 6px; transform:rotate(-6deg); width:fit-content; max-width:fit-content; white-space:pre-line; text-align:center; line-height:1.25; }
-        .stamp.exam { color:var(--exam); border-color:var(--exam); transform:rotate(4deg); }
-        .entry-row.exam { background:color-mix(in srgb, var(--exam) 10%, white); }
-        .entry-row textarea { min-height:34px; }
+        .month-head { font-weight: 700; font-size: 17px; margin: 16px 0 6px; }
+        .month-head:first-child { margin-top: 0; }
+        .entry-row { display: grid; grid-template-columns: 78px 1fr 1fr; gap: 10px; align-items: start; padding: 8px 6px; border-radius: 8px; }
+        .entry-row.holiday { background: color-mix(in srgb, var(--holiday) 10%, white); }
+        .entry-row + .entry-row { border-top: 1px solid var(--bg); }
+        .date-lbl { font-weight: 700; font-size: 15px; padding-top: 8px; display: flex; flex-direction: column; align-items: flex-start; gap: 2px; }
+        .date-lbl .wd { font-weight: 500; color: var(--muted); font-size: 13px; }
+        .stamp { display: inline-block; align-self: flex-start; font-size: 11.5px; font-weight: 700; color: var(--holiday); border: 1.5px solid var(--holiday); border-radius: 5px; padding: 1px 6px; transform: rotate(-6deg); width: fit-content; max-width: fit-content; white-space: pre-line; text-align: center; line-height: 1.25; }
+        .stamp.exam { color: var(--exam); border-color: var(--exam); transform: rotate(4deg); }
+        .entry-row.exam { background: color-mix(in srgb, var(--exam) 10%, white); }
+        .entry-row textarea { min-height: 34px; }
 
-        .week-nav { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; gap:10px; flex-wrap:wrap; }
-        .week-range { display:flex; flex-wrap:wrap; justify-content:center; align-items:baseline; column-gap:6px; font-weight:700; font-size:18.5px; }
-        .week-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:10px; }
-        .week-sync-row { text-align:center; margin:-6px 0 10px; }
-        .week-sync-row .saved-flag { margin-left:0; }
-        @media (max-width:820px) { .week-grid { grid-template-columns:1fr; } }
+        .week-nav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; gap: 10px; flex-wrap: wrap; }
+        .week-range { display: flex; flex-wrap: wrap; justify-content: center; align-items: baseline; column-gap: 6px; font-weight: 700; font-size: 18.5px; }
+        .week-grid { display: grid; grid-template-columns: repeat(5,1fr); gap: 10px; }
+        .week-sync-row { text-align: center; margin: -6px 0 10px; }
+        .week-sync-row .saved-flag { margin-left: 0; }
+        @media (max-width: 820px) { .week-grid { grid-template-columns: 1fr; } }
 
         /* ---- 手機版整體適應 ---- */
-        @media (max-width:640px) {
-            header { padding:16px 56px; }
-            header h1 { font-size:24px; }
-            .header-btn { right:10px; padding:6px 14px; font-size:13px; }
-            #wrap { width:100%; padding:0 12px 40px; }
-            .section { padding:14px 14px; margin:12px 0; }
-            input[type=text], input[type=date], textarea, select { font-size:16px; } /* 避免 iOS 對焦自動縮放 */
-            .entry-row { grid-template-columns:1fr; gap:6px; }
-            .date-lbl { flex-direction:row; align-items:center; gap:8px; padding-top:0; }
-            .subj-row .row { justify-content:space-between; }
-            .config-top-row .field-term { flex:1 1 100%; }
-            .config-top-row .field-date { flex:1 1 45%; }
-            .wd-legend-label { display:block; width:100%; margin-bottom:2px; }
-            .subj-row { display:flex; flex-wrap:wrap; align-items:center; gap:6px; }
-            .subj-row input[data-role=name] { flex:1 1 90px; min-width:70px; width:auto; }
-            .subj-row .swatch { flex:0 0 auto; }
-            .subj-row > .row { flex:1 1 auto; justify-content:flex-end; gap:4px; }
-            .date-name-row { display:flex; gap:6px; flex:1 1 220px; min-width:0; }
-            .date-name-row input[type=date] { flex:0 0 auto; }
-            .date-name-row input[type=text] { flex:1; min-width:0; }
-            .hw-day-head { flex-direction:column; align-items:flex-start; }
-            .day-head { justify-content:center; gap:6px; text-align:center; }
-            .day-head .d { font-size:18px; }
-            .day-head .w { font-size:18px; }
-            .week-nav { flex-direction:row; flex-wrap:nowrap; align-items:center; justify-content:space-between; gap:4px; text-align:center; }
-            .week-sync-row { margin:0 0 2px; line-height:1; }
-            .week-sync-row .saved-flag { font-size:10px; line-height:1; }
-            .week-nav .icon-btn { font-size:14px; padding:5px 10px; flex:0 0 auto; white-space:nowrap; }
-            .week-nav .week-range { font-size:14px; flex:1 1 auto; min-width:0; white-space:normal; justify-content:center; text-align:center; }
-            nav.tabs button { padding:8px 10px 10px; font-size:15px; }
+        @media (max-width: 640px) {
+            /* 3. 手機版標題區塊增高 (padding: 20px 14px) */
+            header { padding: 20px 14px; margin-bottom: 18px; }
+            header h1 { font-size: 24px; }
+            #loginBtn, #logoutBtn { padding: 6px 13px; font-size: 0.84em; right: 10px; }
+            #wrap { width: 100%; padding: 0 12px 40px; }
+            .section { padding: 14px 14px; margin: 12px 0; }
+            input[type=text], input[type=date], textarea, select { font-size: 16px; } /* 避免 iOS 對焦自動縮放 */
+            .entry-row { grid-template-columns: 1fr; gap: 6px; }
+            .date-lbl { flex-direction: row; align-items: center; gap: 8px; padding-top: 0; }
+            .subj-row .row { justify-content: space-between; }
+            .config-top-row .field-term { flex: 1 1 100%; }
+            .config-top-row .field-date { flex: 1 1 45%; }
+            .wd-legend-label { display: block; width: 100%; margin-bottom: 2px; }
+            .subj-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+            .subj-row input[data-role=name] { flex: 1 1 90px; min-width: 70px; width: auto; }
+            .subj-row .swatch { flex: 0 0 auto; }
+            .subj-row > .row { flex: 1 1 auto; justify-content: flex-end; gap: 4px; }
+            .date-name-row { display: flex; gap: 6px; flex: 1 1 220px; min-width: 0; }
+            .date-name-row input[type=date] { flex: 0 0 auto; }
+            .date-name-row input[type=text] { flex: 1; min-width: 0; }
+            .hw-day-head { flex-direction: column; align-items: flex-start; }
+            .day-head { justify-content: center; gap: 6px; text-align: center; }
+            .day-head .d { font-size: 18px; }
+            .day-head .w { font-size: 18px; }
+            .week-nav { flex-direction: row; flex-wrap: nowrap; align-items: center; justify-content: space-between; gap: 4px; text-align: center; }
+            .week-sync-row { margin: 0 0 2px; line-height: 1; }
+            .week-sync-row .saved-flag { font-size: 10px; line-height: 1; }
+            .week-nav .icon-btn { font-size: 14px; padding: 5px 10px; flex: 0 0 auto; white-space: nowrap; }
+            .week-nav .week-range { font-size: 14px; flex: 1 1 auto; min-width: 0; white-space: normal; justify-content: center; text-align: center; }
+            nav.tabs button { padding: 8px 10px 10px; font-size: 15px; }
         }
         /* ---- 電腦版：字級再放大一些 ---- */
-        @media (min-width:641px) {
-            :root { --fs-h2:20px; --fs-body:16.5px; }
-            .hint { font-size:15.5px; }
-            .field label { font-size:15px; }
-            .btn.small { font-size:15.5px; }
-            button.icon-btn { font-size:16px; }
-            nav.tabs button { font-size:17.5px; }
-            .chip { font-size:16.5px; }
-            .wd-toggles button { font-size:15.5px; }
-            .month-head { font-size:18px; }
-            .date-lbl { font-size:16px; }
-            .date-lbl .wd { font-size:14px; }
-            .week-range { font-size:20px; }
-            .day-head .d { font-size:17px; }
-            .day-head .w { font-size:17px; }
-            .subj-card .sname { font-size:14px; }
-            .subj-card textarea { font-size:16px; }
-            .day-empty { font-size:15px; }
-            .hw-day-head .d { font-size:19.5px; }
-            .hw-list li { font-size:16.5px; }
-            .toggle-row { font-size:16px; }
-            .holiday-item { font-size:16px; }
-            .public-digest h2 { font-size:21px; }
-            .public-digest li { font-size:16.5px; }
+        @media (min-width: 641px) {
+            :root { --fs-h2: 20px; --fs-body: 16.5px; }
+            .hint { font-size: 15.5px; }
+            .field label { font-size: 15px; }
+            .btn.small { font-size: 15.5px; }
+            button.icon-btn { font-size: 16px; }
+            nav.tabs button { font-size: 17.5px; }
+            .chip { font-size: 16.5px; }
+            .wd-toggles button { font-size: 15.5px; }
+            .month-head { font-size: 18px; }
+            .date-lbl { font-size: 16px; }
+            .date-lbl .wd { font-size: 14px; }
+            .week-range { font-size: 20px; }
+            .day-head .d { font-size: 17px; }
+            .day-head .w { font-size: 17px; }
+            .subj-card .sname { font-size: 14px; }
+            .subj-card textarea { font-size: 16px; }
+            .day-empty { font-size: 15px; }
+            .hw-day-head .d { font-size: 19.5px; }
+            .hw-list li { font-size: 16.5px; }
+            .toggle-row { font-size: 16px; }
+            .holiday-item { font-size: 16px; }
+            .public-digest h2 { font-size: 21px; }
+            .public-digest li { font-size: 16.5px; }
         }
-        .day-col { background:var(--surface); border:2px solid var(--line); border-radius:10px; overflow:hidden; }
-        .day-head { padding:9px 10px; border-bottom:2px solid var(--line); background:color-mix(in srgb, var(--accent) 12%, var(--surface)); display:flex; justify-content:flex-start; align-items:center; gap:6px; flex-wrap:wrap; }
-        .day-head .d { font-weight:700; font-size:15.5px; }
-        .day-head .w { font-size:15.5px; color:var(--muted); }
-        .day-body { padding:8px; display:flex; flex-direction:column; gap:8px; min-height:50px; }
-        .subj-card { border-radius:8px; padding:7px 8px; border-left:4px solid var(--c); background:color-mix(in srgb, var(--c) 8%, white); }
-        .subj-card .sname { font-size:13px; font-weight:700; color:var(--c); }
-        .tag-hwonly { display:inline-block; align-self:flex-start; font-size:10px; font-weight:700; color:var(--accent); background:color-mix(in srgb, var(--accent) 15%, white); border-radius:4px; padding:1px 5px; width:fit-content; max-width:fit-content; }
-        .subj-card textarea { width:100%; min-height:30px; border:none; background:transparent; padding:2px 0; font-size:15px; }
-        .subj-card textarea:focus { outline:none; box-shadow:none; }
-        .day-empty { font-size:14px; color:var(--muted); padding:10px 4px; }
+        .day-col { background: var(--surface); border: 2px solid var(--line); border-radius: 10px; overflow: hidden; }
+        .day-head { padding: 9px 10px; border-bottom: 2px solid var(--line); background: color-mix(in srgb, var(--accent) 12%, var(--surface)); display: flex; justify-content: flex-start; align-items: center; gap: 6px; flex-wrap: wrap; }
+        .day-head .d { font-weight: 700; font-size: 15.5px; }
+        .day-head .w { font-size: 15.5px; color: var(--muted); }
+        .day-body { padding: 8px; display: flex; flex-direction: column; gap: 8px; min-height: 50px; }
+        .subj-card { border-radius: 8px; padding: 7px 8px; border-left: 4px solid var(--c); background: color-mix(in srgb, var(--c) 8%, white); }
+        .subj-card .sname { font-size: 13px; font-weight: 700; color: var(--c); }
+        .tag-hwonly { display: inline-block; align-self: flex-start; font-size: 10px; font-weight: 700; color: var(--accent); background: color-mix(in srgb, var(--accent) 15%, white); border-radius: 4px; padding: 1px 5px; width: fit-content; max-width: fit-content; }
+        .subj-card textarea { width: 100%; min-height: 30px; border: none; background: transparent; padding: 2px 0; font-size: 15px; }
+        .subj-card textarea:focus { outline: none; box-shadow: none; }
+        .day-empty { font-size: 14px; color: var(--muted); padding: 10px 4px; }
 
-        .hw-day { padding:14px 16px; margin-bottom:10px; }
-        .hw-day-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; flex-wrap:wrap; gap:8px; }
-        .hw-day-head .d { font-weight:700; font-size:18px; }
-        .hw-list { list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:5px; }
-        .hw-list li { font-size:15.5px; padding-left:14px; position:relative; }
-        .hw-list li::before { content:"·"; position:absolute; left:2px; font-weight:900; }
-        .toggle-row { display:flex; align-items:center; gap:8px; margin-bottom:14px; font-size:15px; color:var(--muted); }
-        .holiday-list { display:flex; flex-direction:column; gap:6px; margin-top:10px; }
-        .holiday-item { display:flex; gap:8px; align-items:center; font-size:15px; background:var(--bg); border-radius:8px; padding:6px 9px; }
-        .holiday-item .lbl { flex:1; }
-        .saved-flag { font-size:12.5px; color:var(--muted); margin-left:6px; opacity:0; transition:opacity .3s; }
-        .saved-flag.show { opacity:1; }
-        .public-digest h2 { font-size:19.5px; margin:0 0 4px; }
-        .public-digest ul { margin:6px 0 0; padding-left:18px; }
-        .public-digest li { font-size:15.5px; margin:3px 0; }
-        footer.note { margin-top:24px; font-size:12.5px; color:var(--muted); text-align:center; }
+        .hw-day { padding: 14px 16px; margin-bottom: 10px; }
+        .hw-day-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 8px; }
+        .hw-day-head .d { font-weight: 700; font-size: 18px; }
+        .hw-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 5px; }
+        .hw-list li { font-size: 15.5px; padding-left: 14px; position: relative; }
+        .hw-list li::before { content: "·"; position: absolute; left: 2px; font-weight: 900; }
+        .toggle-row { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; font-size: 15px; color: var(--muted); }
+        .holiday-list { display: flex; flex-direction: column; gap: 6px; margin-top: 10px; }
+        .holiday-item { display: flex; gap: 8px; align-items: center; font-size: 15px; background: var(--bg); border-radius: 8px; padding: 6px 9px; }
+        .holiday-item .lbl { flex: 1; }
+        .saved-flag { font-size: 12.5px; color: var(--muted); margin-left: 6px; opacity: 0; transition: opacity .3s; }
+        .saved-flag.show { opacity: 1; }
+        .public-digest h2 { font-size: 19.5px; margin: 0 0 4px; }
+        .public-digest ul { margin: 6px 0 0; padding-left: 18px; }
+        .public-digest li { font-size: 15.5px; margin: 3px 0; }
+        footer.note { margin-top: 24px; font-size: 12.5px; color: var(--muted); text-align: center; }
     </style>
 </head>
 <body>
@@ -240,8 +298,8 @@
     <header>
         <h1 data-gated><span id="appTitle">班級課程進度</span></h1>
         <!-- 登入入口：模式 B/C 用這顆 Google 登入；模式 A 改用密碼彈窗（見下 openLogin） -->
-        <button id="loginBtn" class="btn outline header-btn">登入</button>
-        <button id="logoutBtn" class="btn outline admin-only hidden header-btn">登出</button>
+        <button id="loginBtn" class="btn outline">登入</button>
+        <button id="logoutBtn" class="btn outline admin-only hidden">登出</button>
     </header>
 
     <main id="content" data-gated>
