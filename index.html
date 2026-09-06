@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>班級課程進度</title>
 
-    <!-- PWA / 桌面圖示：三張 PNG 與此檔同目錄一起上傳，檔名須與 manifest 一致 -->
+    <!-- PWA / 桌面圖示 -->
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="icon-180.png">
     <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
@@ -16,22 +16,22 @@
     <link href="https://fonts.googleapis.com/css2?family=Iansui&display=swap" rel="stylesheet">
 
     <style>
-        /* ---- 全站設計變數：顏色一律用變數，勿寫死 ---- */
+        /* ---- 全站設計變數 ---- */
         :root {
-            --bg: #ece8f0;          /* 頁面底色：icon 的淺灰紫 */
-            --surface: #ffffff;     /* 卡片/輸入框底：改為乾淨白色 */
-            --text: #372f40;        /* 主文字：深灰紫 */
-            --muted: #948c9e;       /* 次要/placeholder */
-            --accent-rgb: 122,108,150;             /* 主色 RGB：icon 灰紫加深（改這裡即可，其餘自動跟隨） */
-            --accent: rgb(var(--accent-rgb));     /* 主色（按鈕、邊框、focus） */
-            --focus-glow: color-mix(in srgb, var(--accent) 50%, transparent); /* focus 光暈：自動＝主色 */
-            --accent-dark: color-mix(in srgb, var(--accent) 82%, #000); /* 主色 hover：自動加深 */
-            --line: #d9d0e0;        /* 分隔線/淺邊框 */
-            --danger: #a85b6b;      /* 刪除/警示 */
-            --holiday: #c0392b;     /* 假日標記色：固定紅色，不隨主色變動 */
-            --exam: #2f7fd1;        /* 考試標記色：固定藍色 */
-            --fs-h2: 18.5px;        /* 卡片標題字級（電腦版會再放大，見下方 media query） */
-            --fs-body: 15px;        /* 內文字級 */
+            --bg: #ece8f0;
+            --surface: #ffffff;
+            --text: #372f40;
+            --muted: #948c9e;
+            --accent-rgb: 122,108,150;
+            --accent: rgb(var(--accent-rgb));
+            --focus-glow: color-mix(in srgb, var(--accent) 50%, transparent);
+            --accent-dark: color-mix(in srgb, var(--accent) 82%, #000);
+            --line: #d9d0e0;
+            --danger: #a85b6b;
+            --holiday: #c0392b;
+            --exam: #2f7fd1;
+            --fs-h2: 18.5px;
+            --fs-body: 15px;
         }
         * { box-sizing: border-box; }
         button, input, select, textarea { font-family: inherit; }
@@ -42,19 +42,14 @@
             -webkit-font-smoothing: antialiased;
         }
 
-        /* ---- 載入 gate：首次資料到齊前隱藏會變動的內容，避免預設值閃現 ---- */
         body:not(.ready) [data-gated] { visibility: hidden; }
 
-        /* ---- 彈窗 base（所有 app 共用這組命名，勿改名） ---- */
         .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.45); align-items: center; justify-content: center; z-index: 1000; }
         .modal-content { background: var(--surface); border: 3px solid var(--line); padding: 36px 44px; border-radius: 20px; text-align: center; box-shadow: 0 20px 55px rgba(0,0,0,0.4); width: min(520px, 90vw); }
         .modal-title { font-size: 1.4em; margin: 0 0 22px; }
-        .modal-content input { display: block; width: 100%; margin: 0 0 24px; padding: 12px 18px; border: 2px solid var(--line); border-radius: 14px; font-family: inherit; font-size: 1.1em; outline: none; text-align: center; background: var(--surface); color: var(--text); }
-        .modal-content input::placeholder { color: var(--muted); }
         .modal-input { display: block; width: 100%; margin: 0 0 24px; padding: 12px 18px; border: 2px solid var(--line); border-radius: 14px; font-family: inherit; font-size: 1.1em; outline: none; text-align: center; background: var(--surface); color: var(--text); }
         .modal-input::placeholder { color: var(--muted); }
         .modal-input:focus { border-color: var(--accent); box-shadow: 0 0 12px 3px var(--focus-glow); }
-        .modal-content input:focus { border-color: var(--accent); box-shadow: 0 0 12px 3px var(--focus-glow); }
         .modal-hint { display: none; margin: -14px 0 18px; font-size: 0.9em; color: var(--danger); }
         .modal-actions { display: flex; justify-content: center; gap: 18px; }
         .modal-actions button { padding: 11px 38px; border-radius: 50px; cursor: pointer; font-family: inherit; font-size: 1.15em; border: 2px solid var(--accent); }
@@ -67,43 +62,43 @@
             .modal-title { white-space: nowrap; }
         }
 
-        /* ---- 一般按鈕 ---- */
         .btn { padding: 9px 22px; border-radius: 50px; border: 2px solid var(--accent); background: var(--accent); color: #fff; font-family: inherit; font-size: 1em; cursor: pointer; }
         .btn.outline { background: transparent; color: var(--accent); }
         .btn.outline:hover { background: var(--accent); color: #fff; }
 
         .admin-only.hidden { display: none; }
-        /* 登入後：不需要再看見登入鈕與上方唯讀預覽，只留編輯區 */
         body.is-admin #loginBtn { display: none; }
         body.is-admin #content { display: none; }
 
         /* =========================================================
-           以下為本 app 業務內容專用樣式（只新增，不改上面共用命名）
+           標題與按鈕專用樣式調整
            ========================================================= */
-        /* 3. 標題區塊增高 (電腦版 padding: 30px 20px) 與下方主色底線 */
         header { 
             position: relative; 
-            display: flex; 
+            display: grid; 
+            grid-template-columns: 1fr auto 1fr; 
             align-items: center; 
-            justify-content: center; 
             padding: 30px 20px; 
             border-bottom: 2px solid var(--accent); 
-            margin-bottom: 24px; /* 4. 保持與下方內容的適當間距 */
+            margin-bottom: 24px;
         }
-        header h1 { font-size: 34.5px; margin: 0; text-align: center; }
+        header h1 { 
+            grid-column: 2; 
+            font-size: 2em; 
+            margin: 0; 
+            text-align: center; 
+        }
         
-        /* 1. 登入鈕設定值 */
         #loginBtn {
-            position: absolute;
-            right: 20px;
-            top: 50%;
-            transform: translateY(-50%);
+            grid-column: 3;
+            justify-self: end;
             background: transparent;
             color: var(--accent);
             border: 2px solid var(--accent);
             padding: 9px 22px;
             border-radius: 50px;
             font-size: 1.05em;
+            font-family: inherit;
             white-space: nowrap;
             transition: all .2s;
             cursor: pointer;
@@ -113,36 +108,33 @@
             color: #fff;
         }
         #loginBtn:active {
-            transform: translateY(-50%) scale(0.97);
+            transform: scale(0.97);
         }
 
-        /* 2. 登出鈕設定值 */
         #logoutBtn {
-            position: absolute;
-            right: 20px;
-            top: 50%;
-            transform: translateY(-50%);
+            grid-column: 3;
+            justify-self: end;
             background: transparent;
-            color: #c0392b;
-            border: 2px solid #c0392b;
+            color: var(--holiday);
+            border: 2px solid var(--holiday);
             padding: 9px 22px;
             border-radius: 50px;
             font-size: 1.05em;
+            font-family: inherit;
             white-space: nowrap;
             transition: all .2s;
             cursor: pointer;
         }
         #logoutBtn:hover {
-            background: #c0392b;
+            background: var(--holiday);
             color: #fff;
         }
         #logoutBtn:active {
-            transform: translateY(-50%) scale(0.97);
+            transform: scale(0.97);
         }
 
         #wrap { width: 85%; max-width: 1100px; margin: 0 auto; padding: 0 24px 60px; }
         .card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; box-shadow: 0 1px 0 rgba(0,0,0,.04); }
-        .form-card { /* 與其他分頁卡片同寬，不再另外限制 */ }
         .section { padding: 18px 20px; margin: 16px 0; }
         .hint { font-size: 14.5px; color: var(--muted); line-height: 1.7; }
         .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
@@ -163,7 +155,7 @@
         button.icon-btn:disabled { opacity: .4; cursor: default; }
         .empty { text-align: center; padding: 40px 20px; color: var(--muted); }
 
-        nav.tabs { display: flex; gap: 4px; margin: 14px 0 6px; border-bottom: 2px solid var(--line); flex-wrap: wrap; overflow: visible; }
+        nav.tabs { display: flex; gap: 4px; margin: 14px 0 6px; border-bottom: 2px solid var(--line); flex-wrap: wrap; }
         nav.tabs button { font-family: inherit; font-weight: 700; font-size: 16.5px; background: none; border: none; cursor: pointer; color: var(--muted); padding: 9px 14px 11px; position: relative; white-space: nowrap; }
         nav.tabs button.active { color: var(--text); }
         nav.tabs button.active::after { content: ""; position: absolute; left: 8px; right: 8px; bottom: -2px; height: 3px; background: var(--accent); border-radius: 2px 2px 0 0; }
@@ -204,15 +196,14 @@
         .week-sync-row .saved-flag { margin-left: 0; }
         @media (max-width: 820px) { .week-grid { grid-template-columns: 1fr; } }
 
-        /* ---- 手機版整體適應 ---- */
-        @media (max-width: 640px) {
-            /* 3. 手機版標題區塊增高 (padding: 20px 14px) */
+        /* ---- 手機版適應 (max-width: 680px) ---- */
+        @media (max-width: 680px) {
             header { padding: 20px 14px; margin-bottom: 18px; }
-            header h1 { font-size: 24px; }
-            #loginBtn, #logoutBtn { padding: 6px 13px; font-size: 0.84em; right: 10px; }
+            header h1 { font-size: 1.5em; }
+            #loginBtn, #logoutBtn { padding: 6px 13px; font-size: 0.84em; }
             #wrap { width: 100%; padding: 0 12px 40px; }
             .section { padding: 14px 14px; margin: 12px 0; }
-            input[type=text], input[type=date], textarea, select { font-size: 16px; } /* 避免 iOS 對焦自動縮放 */
+            input[type=text], input[type=date], textarea, select { font-size: 16px; }
             .entry-row { grid-template-columns: 1fr; gap: 6px; }
             .date-lbl { flex-direction: row; align-items: center; gap: 8px; padding-top: 0; }
             .subj-row .row { justify-content: space-between; }
@@ -237,8 +228,8 @@
             .week-nav .week-range { font-size: 14px; flex: 1 1 auto; min-width: 0; white-space: normal; justify-content: center; text-align: center; }
             nav.tabs button { padding: 8px 10px 10px; font-size: 15px; }
         }
-        /* ---- 電腦版：字級再放大一些 ---- */
-        @media (min-width: 641px) {
+
+        @media (min-width: 681px) {
             :root { --fs-h2: 20px; --fs-body: 16.5px; }
             .hint { font-size: 15.5px; }
             .field label { font-size: 15px; }
@@ -294,27 +285,22 @@
     </style>
 </head>
 <body>
-    <!-- ====== 版面骨架（業務內容放這裡） ====== -->
     <header>
         <h1 data-gated><span id="appTitle">班級課程進度</span></h1>
-        <!-- 登入入口：模式 B/C 用這顆 Google 登入；模式 A 改用密碼彈窗（見下 openLogin） -->
         <button id="loginBtn" class="btn outline">登入</button>
         <button id="logoutBtn" class="btn outline admin-only hidden">登出</button>
     </header>
 
     <main id="content" data-gated>
-        <!-- 家長端/一般使用者看到的內容：今日／近期作業唯讀摘要 -->
     </main>
 
     <section id="adminArea" class="admin-only hidden">
-        <!-- 登入後才顯示的編輯區：課程進度 / 週進度 / 作業安排 / 學期設定 -->
     </section>
 
-    <!-- ====== 密碼彈窗（僅登入模式 A 使用） ====== -->
     <div id="inputModal" class="modal-overlay">
         <div class="modal-content">
             <p class="modal-title">請輸入密碼</p>
-            <input type="password" id="passInput" placeholder="密碼" autocomplete="off">
+            <input type="password" id="passInput" class="modal-input" placeholder="密碼" autocomplete="off">
             <p id="imeHint" class="modal-hint">偵測到中文輸入法，密碼請切換為英數</p>
             <div class="modal-actions">
                 <button class="btn-ok" onclick="checkPass()">確定</button>
@@ -323,7 +309,6 @@
         </div>
     </div>
 
-    <!-- ====== 通用提示框（取代原生 alert） ====== -->
     <div id="alertModal" class="modal-overlay">
         <div class="modal-content">
             <p class="modal-title" id="alertMsg"></p>
@@ -333,7 +318,6 @@
         </div>
     </div>
 
-    <!-- ====== 通用輸入框（取代原生 prompt；askInput 使用） ====== -->
     <div id="promptModal" class="modal-overlay">
         <div class="modal-content">
             <p class="modal-title" id="promptMsg"></p>
@@ -346,10 +330,6 @@
     </div>
 
     <script type="module">
-        /* =========================================================
-           通用骨架：Firebase + 三種登入模式 + 通用資料層 + 載入 gate
-           每支新 app 從此檔複製，只改「業務設定」與「業務邏輯」兩區。
-           ========================================================= */
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, onAuthStateChanged, signOut,
                  signInWithEmailAndPassword,
@@ -358,8 +338,6 @@
 
         const $ = id => document.getElementById(id);
 
-        /* ========== 業務設定（每支 app 改這裡） ========== */
-        // apiKey 可公開（Firebase web key 為識別碼，非機密）；安全靠 Firestore 規則，勿試圖隱藏
         const firebaseConfig = {
             apiKey: "AIzaSyA1S_AmQ_DbtxWMhQSSVacFr4pzrg4nfLk",
             authDomain: "class-course-progress.firebaseapp.com",
@@ -368,18 +346,15 @@
             messagingSenderId: "1079895566529",
             appId: "1:1079895566529:web:2b58b08259d16ae5f50c40"
         };
-        const DOC_PATH = ["classProgress", "main"];   // Firestore 文件路徑
-        const SAVE_MERGE = false;              // 整包覆蓋：本 app 每次都持有完整狀態，直接覆蓋最單純、不會有 merge 語意疑慮
+        const DOC_PATH = ["classProgress", "main"];
+        const SAVE_MERGE = false;
 
-        // 登入模式：'A'=共用帳號只輸密碼；'B'=綁 1 個 Google 帳號；'C'=綁 2 個 Google 帳號
         const LOGIN_MODE = 'A';
-        const SHARED_EMAIL = "annychen1210@gmail.com";              // 模式 A：寫死的登入 email（密碼在 Firebase Authentication 後台設定）
-        const ALLOWED_EMAILS = ["annychen1210@gmail.com", "annychen1210@go.edu.tw"]; // 模式 A 不會用到，保留供之後切換
-        /* ================================================ */
+        const SHARED_EMAIL = "annychen1210@gmail.com";
+        const ALLOWED_EMAILS = ["annychen1210@gmail.com", "annychen1210@go.edu.tw"];
 
-        // 啟動前檢查 config 是否已填，未填則顯示提示而非白畫面崩潰
         if(!firebaseConfig.apiKey || !firebaseConfig.projectId){
-            document.body.innerHTML = '<div style="max-width:520px;margin:80px auto;padding:24px;font-family:sans-serif;line-height:1.7;color:#2e3a35;text-align:center">尚未填入 Firebase 設定。<br>請在原始碼「業務設定」區的 <code>firebaseConfig</code> 填入你的專案設定後再開啟。</div>';
+            document.body.innerHTML = '<div style="max-width:520px;margin:80px auto;padding:24px;font-family:sans-serif;line-height:1.7;color:#2e3a35;text-align:center">尚未填入 Firebase 設定。</div>';
             throw new Error('firebaseConfig 未設定');
         }
         const app = initializeApp(firebaseConfig);
@@ -388,18 +363,13 @@
         const ref = doc(db, ...DOC_PATH);
 
         let isAdmin = false, editorReady = false, dataArrived = false, errored = false, lastData = null;
-        // onSnapshot 錯誤後監聽即終止、不再恢復，故錯誤為單向：顯示後固定，需使用者重新整理。
         function showLoadError(){ if(!document.getElementById('loadError')){ const d=document.createElement('div'); d.id='loadError'; d.textContent='載入失敗，請重新整理頁面'; d.style.cssText='position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:var(--danger);color:#fff;padding:10px 18px;border-radius:10px;z-index:2000;font-size:0.95em'; document.body.appendChild(d); } }
 
-        /* ---------- 載入 gate ---------- */
-        let readyTimer = setTimeout(markReady, 8000); // 逾時保險（僅防 Firebase 完全無回應；正常時首次 snapshot 到達即顯示）
+        let readyTimer = setTimeout(markReady, 8000);
         function markReady(){ clearTimeout(readyTimer); document.body.classList.add("ready"); }
 
-        // 只有「已登入 + 首次資料已回 + 尚未載入」三者皆成立才灌編輯區，
-        // 避免 onAuthStateChanged 與首次 onSnapshot 到達順序不定造成的競態（以 null 灌空）。
         function maybeLoadEditor(){ if(isAdmin && dataArrived && !editorReady) loadEditor(lastData); }
 
-        /* ---------- 通用資料層 ---------- */
         function saveData(obj){ if(!isAdmin) return; setDoc(ref, obj, { merge: SAVE_MERGE }).catch(e=>console.warn(e)); }
         onSnapshot(ref, snap => {
             lastData = snap.exists() ? snap.data() : null;
@@ -408,10 +378,6 @@
             maybeLoadEditor(); markReady();
         }, err => { console.warn(err); errored = true; renderPublic(lastData, { error: true }); showLoadError(); markReady(); });
 
-        /* ---------- 授權判斷 ----------
-           注意：這只 gate 前端 UI 顯示，不是安全邊界。任何人改前端或直接打
-           Firestore 都能繞過。真正的存取控制必須寫在 Firestore 安全規則，
-           以登入者 email/uid 限制讀寫。LOGIN_MODE 與白名單只影響介面。 */
         function isAuthorized(user){
             if(!user) return false;
             if(LOGIN_MODE === 'A') return user.email === SHARED_EMAIL;
@@ -426,11 +392,9 @@
             maybeLoadEditor();
         });
 
-        // 通用提示框（取代原生 alert）
         window.showAlert = (msg) => { $('alertMsg').textContent = msg; $('alertModal').style.display = 'flex'; };
         window.closeAlert = () => { $('alertModal').style.display = 'none'; };
 
-        // 通用輸入框（取代原生 prompt）。回傳輸入字串；取消回傳 null。Enter=確定、Esc=取消
         window.askInput = (msg, def) => new Promise(res => {
             const m = $('promptModal'), inp = $('promptInput'), ok = $('promptOk'), no = $('promptNo');
             $('promptMsg').textContent = msg; inp.value = def || '';
@@ -441,14 +405,12 @@
             inp.onkeydown = e => { if(e.key === 'Enter') done(inp.value); else if(e.key === 'Escape') done(null); };
         });
 
-        /* ---------- 登入 / 登出 ---------- */
         $('loginBtn').onclick = () => {
             if(LOGIN_MODE === 'A'){ window.openLogin(); }
             else { signInWithPopup(auth, new GoogleAuthProvider()).catch(e=>window.showAlert("登入失敗")); }
         };
         $('logoutBtn').onclick = () => signOut(auth);
 
-        // 模式 A 密碼彈窗
         window.openLogin  = () => { $('passInput').value=''; $('imeHint').style.display='none'; $('inputModal').style.display='flex'; setTimeout(()=>$('passInput').focus(),50); };
         window.closeModal = () => { $('inputModal').style.display='none'; $('passInput').value=''; $('imeHint').style.display='none'; };
         window.checkPass  = async () => {
@@ -456,20 +418,12 @@
             try { await signInWithEmailAndPassword(auth, SHARED_EMAIL, pw); window.closeModal(); }
             catch(e){ window.showAlert("密碼錯誤"); $('passInput').value=''; $('passInput').focus(); }
         };
-        // IME 提示（密碼欄含非英數就提示）
         const checkIME = () => { $('imeHint').style.display = /[^\x00-\x7F]/.test($('passInput').value) ? 'block' : 'none'; };
         $('passInput').addEventListener('keydown', e => { if(e.key === 'Enter' && !e.isComposing && e.keyCode !== 229) window.checkPass(); });
         $('passInput').addEventListener('compositionstart', () => { $('imeHint').style.display='block'; });
         $('passInput').addEventListener('input', e => { if(!e.isComposing) checkIME(); });
         $('passInput').addEventListener('compositionend', checkIME);
 
-        /* ========== 業務邏輯（本 app 實作） ==========
-           資料結構（單一文件 classProgress/main）：
-           { config:{termName,start,end,subjects:[{id,name,weekdays:[1-5],color}]},
-             entries:{ 'YYYY-MM-DD': { subjectId: {progress,homework} } },
-             holidays:{ 'YYYY-MM-DD': '假日名稱' } }
-           課程進度／週進度／作業安排三個畫面共用這份資料，只是排版不同。
-        ============================================== */
         const PALETTE = ['#e0464f','#2f7fd1','#2fa84f','#e0872e','#8b5cf6','#14958f','#c9a227','#d6499c'];
         const WD = ['日','一','二','三','四','五','六'];
         const pad = n => String(n).padStart(2,'0');
@@ -478,12 +432,11 @@
         const shortD = s => { const d=parseD(s); return (d.getMonth()+1)+'/'+d.getDate(); };
         const wdOf = s => parseD(s).getDay();
         function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
-        // 考試標籤自動換行：「國、自期中考」→「國、自」換行「期中考」，方框內文字置中（CSS white-space:pre-line 負責換行）
+        
         function formatExamLabel(label){
             const m = String(label||'').match(/^(.*?)(期中考|期末考)$/);
             return (m && m[1]) ? (m[1] + '\n' + m[2]) : label;
         }
-        // 假日標籤自動換行：超過 5 個字且以「放假／補假」結尾時，拆成「節日名稱」換行「放假／補假」
         function formatHolidayLabel(label){
             const s = String(label||'');
             if(s.length <= 5) return s;
@@ -505,14 +458,12 @@
             return weeks;
         }
         function subjectsOnDate(cfg, ds){ const wd = wdOf(ds); return (cfg.subjects||[]).filter(s=>s.weekdays.includes(wd)); }
-        // 作業安排／唯讀摘要用：包含正常上課日 + 該科目「只交作業」的星期
         function subjectsForHomework(cfg, ds){
             const wd = wdOf(ds);
             return (cfg.subjects||[]).filter(s=> s.weekdays.includes(wd) || (s.hwOnly||[]).includes(wd));
         }
         function getEntry(data, ds, sid){ return (data.entries[ds] && data.entries[ds][sid]) || {progress:'', homework:''}; }
 
-        /* ---------- renderPublic：唯讀，供未登入者查看今日／近期作業 ---------- */
         function renderPublic(data, status){
             const el = $('content');
             if(status.error){ el.innerHTML = '<div class="empty">資料讀取失敗，請重新整理頁面。</div>'; return; }
@@ -520,7 +471,6 @@
             const dates = schoolDates(data.config);
             const todayStr = fmt(new Date());
 
-            // 找出「本週」：今天所在的那一週；學期還沒開始就顯示第一週，已結束就顯示最後一週
             const weeks = weeksOf(dates);
             let curWeek = weeks.find(w => todayStr <= w[w.length-1]);
             if(!curWeek) curWeek = weeks[weeks.length-1];
@@ -564,7 +514,6 @@
             </div>`;
         }
 
-        /* ---------- loadEditor：登入後、資料首次到齊時建置一次完整編輯介面 ---------- */
         function loadEditor(data){
             editorReady = true;
             const local = data ? JSON.parse(JSON.stringify(data)) : { config:null, entries:{}, holidays:{} };
@@ -588,7 +537,7 @@
                 const wdBtn = w=>{
                     const isClass = s.weekdays.includes(w), isHw = !isClass && (s.hwOnly||[]).includes(w);
                     const cls = isClass ? 'on' : (isHw ? 'hw' : '');
-                    const title = isClass ? '上課＋作業（點一下→只交作業）' : isHw ? '只交作業（點一下→無）' : '無（點一下→上課＋作業）';
+                    const title = isClass ? '上課＋作業' : isHw ? '只交作業' : '無';
                     return `<button type="button" data-role="wd" data-wd="${w}" class="${cls}" title="${title}">${WD[w]}</button>`;
                 };
                 return `<div class="subj-row" data-sid="${s.id}">
@@ -622,7 +571,6 @@
                             if(nxt==='class') s.weekdays.push(w);
                             if(nxt==='hw') s.hwOnly.push(w);
                             btn.className = nxt==='class' ? 'on' : nxt==='hw' ? 'hw' : '';
-                            btn.title = nxt==='class' ? '上課＋作業（點一下→只交作業）' : nxt==='hw' ? '只交作業（點一下→無）' : '無（點一下→上課＋作業）';
                         };
                     });
                     row.querySelector('[data-role=swatch]').onclick = ()=>{ const i=PALETTE.indexOf(s.color); s.color=PALETTE[(i+1)%PALETTE.length]; row.querySelector('[data-role=swatch]').style.background=s.color; };
@@ -660,14 +608,14 @@
                         <button data-tab="settings" class="${ui.tab==='settings'?'active':''}">學期設定</button>
                     </nav>
                     <div id="tab-body">${tabHtml()}</div>
-                    <footer class="note">資料即時同步到 Firebase；此頁的公開版本（未登入）只會顯示近期作業摘要。</footer>
+                    <footer class="note">資料即時同步到 Firebase。</footer>
                 </div>`;
                 bindApp();
             }
             function onboardingHtml(){
                 return `<div id="wrap"><div class="card section form-card">
                     <h2 style="margin-bottom:6px;">先設定這學期</h2>
-                    <p class="hint">進度、週總表、作業摘要共用同一份資料——填一次「課程進度」，其餘畫面自動整理，換學期只要重設這裡即可。</p>
+                    <p class="hint">進度、週總表、作業摘要共用同一份資料。</p>
                     ${configFormHtml({termName:'', start:'', end:'', subjects: defaultSubjects()})}
                     <div class="row" style="margin-top:14px;"><button class="btn" id="save-setup">建立學期</button></div>
                 </div></div>`;
@@ -721,8 +669,7 @@
                     <span class="saved-flag">已同步</span>
                 </div>
                 <div class="card section">
-                    <h2 style="font-size:var(--fs-h2);">${esc(subj.name)}　<span class="hint" style="font-weight:400;">上課日：${subj.weekdays.map(w=>WD[w]).join('、')||'無'}${(subj.hwOnly&&subj.hwOnly.length)?'　只交作業：'+subj.hwOnly.map(w=>WD[w]).join('、'):''}</span></h2>
-                    <p class="hint">要調整「只交作業」的星期，請到「學期設定」→ 該科目的星期按鈕點兩下（切換成紫色）。</p>
+                    <h2 style="font-size:var(--fs-h2);">${esc(subj.name)}</h2>
                     ${dates.length ? rows : '<p class="hint">此科目在學期範圍內沒有排定的上課日。</p>'}
                 </div>`;
             }
@@ -752,7 +699,6 @@
                     </div>
                     <div class="week-sync-row"><span class="saved-flag">已同步</span></div>
                     <div class="week-grid">${cols}</div>
-                    <p class="hint" style="margin-top:12px;">這裡的進度欄位與「課程進度」是同一份資料，互相同步。</p>
                 </div>`;
             }
             function homeworkHtml(){
@@ -783,17 +729,15 @@
                 return `<div class="card section form-card">
                     <h2 style="font-size:var(--fs-h2); margin-bottom:10px;">學期與科目</h2>
                     ${configFormHtml(local.config)}
-                    <div class="row" style="margin-top:14px;"><button class="btn" id="save-config">儲存設定</button><span class="hint">調整日期或科目不會刪除已填的進度／作業資料。</span></div>
+                    <div class="row" style="margin-top:14px;"><button class="btn" id="save-config">儲存設定</button></div>
                 </div>
                 <div class="card section form-card">
                     <h2 style="font-size:var(--fs-h2); margin-bottom:6px;">標記假日</h2>
-                    <p class="hint">選一個日期並輸入假日名稱，系統會把當天所有排課科目的進度自動填上這個名稱，作業欄留空，之後仍可個別修改。</p>
                     <div class="row" style="margin-top:10px;"><div class="date-name-row"><input type="date" id="hol-date"><input type="text" id="hol-label" placeholder="例：教師節補假"></div><button class="btn small" id="hol-apply">套用</button></div>
                     <div class="holiday-list">${holidayRows}</div>
                 </div>
                 <div class="card section form-card">
                     <h2 style="font-size:var(--fs-h2); margin-bottom:6px;">標記考試日</h2>
-                    <p class="hint">選一個日期並輸入考試名稱（例如「期中考」），只會在課程進度／週進度／作業安排上顯示藍色標記，不會更動任何進度或作業內容。</p>
                     <div class="row" style="margin-top:10px;"><div class="date-name-row"><input type="date" id="exam-date"><input type="text" id="exam-label" placeholder="例：期中考"></div><button class="btn small" id="exam-apply">套用</button></div>
                     <div class="holiday-list">${examRows}</div>
                 </div>
@@ -901,7 +845,6 @@
 
             renderApp();
         }
-        /* ================================================= */
     </script>
 </body>
 </html>
