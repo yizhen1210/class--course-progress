@@ -16,7 +16,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Iansui&display=swap" rel="stylesheet">
 
     <style>
-        /* ---- 全站設計變數 ---- */
+        /* ---- 全站與基礎設定規範 ---- */
         :root {
             --bg: #ece8f0;
             --surface: #ffffff;
@@ -72,7 +72,7 @@
         body.is-admin #content { display: none; }
 
         /* =========================================================
-           頂部 Header 標準網格佈局與樣式
+           頂部 Header 標準網格佈局與樣式規範
            ========================================================= */
         header { 
             display: grid; 
@@ -102,7 +102,7 @@
             font-size: 2em; 
             margin: 0; 
             white-space: nowrap; 
-            line-height: 1.2; 
+            line-height: 1.3; 
         }
 
         #loginBtn, #logoutBtn {
@@ -305,8 +305,8 @@
             <h1><span id="appTitle">班級課程進度</span></h1>
         </div>
         <div class="header-actions">
-            <button id="loginBtn">登入</button>
-            <button id="logoutBtn" class="admin-only hidden">登出</button>
+            <button id="loginBtn" class="btn outline">登入</button>
+            <button id="logoutBtn" class="btn outline admin-only hidden">登出</button>
         </div>
     </header>
 
@@ -597,7 +597,7 @@
                     const up = row.querySelector('[data-role=up]');
                     if(up) up.onclick = ()=>{ if(idx>0){ [subjects[idx-1],subjects[idx]]=[subjects[idx],subjects[idx-1]]; renderSubjList(editor, subjects); } };
                     const down = row.querySelector('[data-role=down]');
-                    if(down) down.onclick = ()=>{ if(idx<subjects.length-1){ [subjects[idx+1],subjects[idx]]=[subjects[idx],subjects[idx+1]]; renderSubjList(editor, subjects); } };
+                    if(down) down.onclick = ()=>{ if(idx<subjects.length-1){ [subjects[idx+1],subjects[idx]]=[subjects[idx],subjects[idx-1]]; renderSubjList(editor, subjects); } };
                     const del = row.querySelector('[data-role=del-subj]');
                     if(del) del.onclick = ()=>{ const i2=subjects.findIndex(x=>x.id===sid); if(i2>-1) subjects.splice(i2,1); renderSubjList(editor, subjects); };
                 });
