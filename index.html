@@ -72,66 +72,72 @@
         body.is-admin #content { display: none; }
 
         /* =========================================================
-           標題與按鈕專用樣式調整
+           頂部 Header 標準網格佈局與樣式
            ========================================================= */
         header { 
-            position: relative; 
             display: grid; 
             grid-template-columns: 1fr auto 1fr; 
             align-items: center; 
-            padding: 30px 20px; 
+            gap: 8px; 
+            max-width: 1100px; 
+            margin: 0 auto 24px;
             border-bottom: 2px solid var(--accent); 
-            margin-bottom: 24px;
-        }
-        header h1 { 
-            grid-column: 2; 
-            font-size: 2em; 
-            margin: 0; 
-            text-align: center; 
-        }
-        
-        #loginBtn {
-            grid-column: 3;
-            justify-self: end;
-            background: transparent;
-            color: var(--accent);
-            border: 2px solid var(--accent);
-            padding: 9px 22px;
-            border-radius: 50px;
-            font-size: 1.05em;
-            font-family: inherit;
-            white-space: nowrap;
-            transition: all .2s;
-            cursor: pointer;
-        }
-        #loginBtn:hover {
-            background: var(--accent);
-            color: #fff;
-        }
-        #loginBtn:active {
-            transform: scale(0.97);
+            padding: 30px 20px;
         }
 
-        #logoutBtn {
-            grid-column: 3;
-            justify-self: end;
+        .header-title { 
+            grid-column: 2; 
+            justify-self: center; 
+            text-align: center; 
+        }
+
+        .header-actions { 
+            grid-column: 3; 
+            justify-self: end; 
+            display: flex; 
+            align-items: center; 
+        }
+
+        header h1 { 
+            font-size: 2em; 
+            margin: 0; 
+            white-space: nowrap; 
+            line-height: 1.2; 
+        }
+
+        #loginBtn, #logoutBtn {
             background: transparent;
-            color: var(--holiday);
-            border: 2px solid var(--holiday);
             padding: 9px 22px;
             border-radius: 50px;
-            font-size: 1.05em;
             font-family: inherit;
+            font-size: 1.05em;
             white-space: nowrap;
-            transition: all .2s;
+            transition: all 0.2s;
             cursor: pointer;
         }
-        #logoutBtn:hover {
-            background: var(--holiday);
-            color: #fff;
+
+        #loginBtn { 
+            color: var(--accent); 
+            border: 2px solid var(--accent); 
         }
-        #logoutBtn:active {
-            transform: scale(0.97);
+        #loginBtn:hover { 
+            background: var(--accent); 
+            color: #fff; 
+        }
+        #loginBtn:active { 
+            transform: scale(0.97); 
+        }
+
+        #logoutBtn { 
+            color: var(--holiday); 
+            border: 2px solid var(--holiday); 
+        }
+        #logoutBtn:hover { 
+            background: var(--holiday); 
+            color: #fff; 
+        }
+        #logoutBtn:active { 
+            transform: scale(0.97); 
         }
 
         #wrap { width: 85%; max-width: 1100px; margin: 0 auto; padding: 0 24px 60px; }
@@ -197,11 +203,19 @@
         .week-sync-row .saved-flag { margin-left: 0; }
         @media (max-width: 820px) { .week-grid { grid-template-columns: 1fr; } }
 
-        /* ---- 手機版適應 (max-width: 680px) ---- */
+        /* ---- 手機版響應式自適應設定 ---- */
         @media (max-width: 680px) {
-            header { padding: 20px 14px; margin-bottom: 18px; }
-            header h1 { font-size: 1.5em; }
-            #loginBtn, #logoutBtn { padding: 6px 13px; font-size: 0.84em; }
+            header {
+                padding: 20px 14px;
+                margin-bottom: 18px;
+            }
+            header h1 { 
+                font-size: 1.5em; 
+            }
+            #loginBtn, #logoutBtn {
+                padding: 6px 13px;
+                font-size: 0.84em;
+            }
             #wrap { width: 100%; padding: 0 12px 40px; }
             .section { padding: 14px 14px; margin: 12px 0; }
             input[type=text], input[type=date], textarea, select { font-size: 16px; }
@@ -287,9 +301,13 @@
 </head>
 <body>
     <header>
-        <h1 data-gated><span id="appTitle">班級課程進度</span></h1>
-        <button id="loginBtn" class="btn outline">登入</button>
-        <button id="logoutBtn" class="btn outline admin-only hidden">登出</button>
+        <div class="header-title" data-gated>
+            <h1><span id="appTitle">班級課程進度</span></h1>
+        </div>
+        <div class="header-actions">
+            <button id="loginBtn">登入</button>
+            <button id="logoutBtn" class="admin-only hidden">登出</button>
+        </div>
     </header>
 
     <main id="content" data-gated>
