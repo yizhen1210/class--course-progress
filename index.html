@@ -476,6 +476,15 @@
             if(cur.length) weeks.push(cur);
             return weeks;
         }
+        function getCurrentWeekIdx(cfg){
+            const dates = schoolDates(cfg);
+            const weeks = weeksOf(dates);
+            if(!weeks.length) return 0;
+            const todayStr = fmt(new Date());
+            let idx = weeks.findIndex(w => todayStr <= w[w.length-1]);
+            if(idx === -1) idx = weeks.length - 1;
+            return idx;
+        }
         function subjectsOnDate(cfg, ds){ const wd = wdOf(ds); return (cfg.subjects||[]).filter(s=>s.weekdays.includes(wd)); }
         function subjectsForHomework(cfg, ds){
             const wd = wdOf(ds);
@@ -549,7 +558,10 @@
                          mkSubject('健康',[1]), mkSubject('彈性課',[2]), mkSubject('閱讀課',[3]), mkSubject('綜合',[4]), mkSubject('表達力',[5]) ];
             }
 
-            let ui = { tab:'progress', subjectId: local.config && local.config.subjects[0] && local.config.subjects[0].id, weekIdx:0, hwOnlyFilled:true };
+            let ui = { tab:'progress', subjectId: local.config && local.config.subjects[0] && local.config.subjects[0].id, weekIdx: 0, hwOnlyFilled:true };
+            if(local.config) {
+                ui.weekIdx = getCurrentWeekIdx(local.config);
+            }
             const host = $('adminArea');
 
             function subjRowHtml(s, idx, total){
@@ -653,6 +665,7 @@
                     if(!cleaned.length){ window.showAlert('至少需要一個有名稱、有勾選星期的科目'); return; }
                     local.config = { termName, start, end, subjects: cleaned };
                     ui.subjectId = cleaned[0].id;
+                    ui.weekIdx = getCurrentWeekIdx(cleaned);
                     saveData(local); renderApp();
                 };
             }
@@ -772,7 +785,13 @@
 
             function autoGrow(ta){ ta.style.height='auto'; ta.style.height=(ta.scrollHeight)+'px'; }
             function bindApp(){
-                document.querySelectorAll('nav.tabs button').forEach(b=> b.onclick = ()=>{ ui.tab=b.dataset.tab; renderApp(); });
+                document.querySelectorAll('nav.tabs button').forEach(b=> b.onclick = ()=>{ 
+                    ui.tab=b.dataset.tab; 
+                    if(ui.tab === 'week' && local.config) {
+                        ui.weekIdx = getCurrentWeekIdx(local.config);
+                    }
+                    renderApp(); 
+                });
                 if(ui.tab==='progress') bindProgress();
                 if(ui.tab==='week') bindWeek();
                 if(ui.tab==='homework') bindHomework();
@@ -817,7 +836,7 @@
                     if(!cleaned.length){ window.showAlert('至少需要一個有名稱、有勾選星期的科目'); return; }
                     local.config = { termName, start, end, subjects: cleaned };
                     if(!cleaned.find(s=>s.id===ui.subjectId)) ui.subjectId = cleaned[0].id;
-                    ui.weekIdx = 0;
+                    ui.weekIdx = getCurrentWeekIdx(cleaned);
                     saveData(local); renderApp();
                 };
                 document.getElementById('hol-apply').onclick = ()=>{
@@ -848,7 +867,7 @@
                             const parsed = JSON.parse(reader.result);
                             if(!parsed.config) throw new Error('格式不正確');
                             local.config = parsed.config; local.entries = parsed.entries||{}; local.holidays = parsed.holidays||{}; local.exams = parsed.exams||{};
-                            ui = { tab:'progress', subjectId: local.config.subjects[0] && local.config.subjects[0].id, weekIdx:0, hwOnlyFilled:true };
+                            ui = { tab:'progress', subjectId: local.config.subjects[0] && local.config.subjects[0].id, weekIdx:getCurrentWeekIdx(local.config), hwOnlyFilled:true };
                             saveData(local); renderApp();
                         }catch(err){ window.showAlert('匯入失敗：檔案格式不正確'); }
                     };
