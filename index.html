@@ -67,6 +67,12 @@
         .btn.outline { background: transparent; color: var(--accent); }
         .btn.outline:hover { background: var(--accent); color: #fff; }
 
+        /* ---- 所有按鈕點擊時縮放壓感特效 ---- */
+        button:active, .btn:active, button.icon-btn:active, nav.tabs button:active, .chip:active {
+            transform: scale(0.97);
+            transition: transform 0.1s ease;
+        }
+
         .admin-only.hidden { display: none; }
         body.is-admin #loginBtn { display: none; }
         body.is-admin #content { display: none; }
@@ -124,9 +130,6 @@
             background: var(--accent); 
             color: #fff; 
         }
-        #loginBtn:active { 
-            transform: scale(0.97); 
-        }
 
         #logoutBtn { 
             color: var(--holiday); 
@@ -135,9 +138,6 @@
         #logoutBtn:hover { 
             background: var(--holiday); 
             color: #fff; 
-        }
-        #logoutBtn:active { 
-            transform: scale(0.97); 
         }
 
         #wrap { width: 85%; max-width: 1100px; margin: 0 auto; padding: 0 24px 60px; }
@@ -558,10 +558,8 @@
                          mkSubject('健康',[1]), mkSubject('彈性課',[2]), mkSubject('閱讀課',[3]), mkSubject('綜合',[4]), mkSubject('表達力',[5]) ];
             }
 
-            let ui = { tab:'progress', subjectId: local.config && local.config.subjects[0] && local.config.subjects[0].id, weekIdx: 0, hwOnlyFilled:true };
-            if(local.config) {
-                ui.weekIdx = getCurrentWeekIdx(local.config);
-            }
+            let initialWeekIdx = local.config ? getCurrentWeekIdx(local.config) : 0;
+            let ui = { tab:'progress', subjectId: local.config && local.config.subjects[0] && local.config.subjects[0].id, weekIdx: initialWeekIdx, hwOnlyFilled:true };
             const host = $('adminArea');
 
             function subjRowHtml(s, idx, total){
@@ -876,7 +874,7 @@
                 document.getElementById('reset-btn').onclick = ()=>{
                     if(!confirm('確定要清除所有資料嗎？此動作無法復原。')) return;
                     local.config = null; local.entries = {}; local.holidays = {}; local.exams = {};
-                    ui = { tab:'progress', subjectId:null, weekIdx:0, hwOnlyFilled:true };
+                    ui = { tab:'progress', subjectId:null, weekIdx: getCurrentWeekIdx({start:'2026-01-01', end:'2026-12-31'}), hwOnlyFilled:true };
                     saveData(local); renderApp();
                 };
             }
